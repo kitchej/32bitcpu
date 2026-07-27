@@ -1,0 +1,165 @@
+#!/usr/bin/env python3
+"""
+Generates a binary file with encoded instructions for each format type.
+Creates a byte array spanning from 0x00005000 to 0x0FFFFFFF
+"""
+
+import struct
+
+# Opcode definitions (matching the CPU's Opcode enum)
+OPCODES = {
+	'NOP': 0,
+	'ADD': 1,
+	'ADDI': 2,
+	'AND': 3,
+	'ANDI': 4,
+	'BRN': 5,
+	'BRP': 6,
+	'BRZ': 7,
+	'DIV': 8,
+	'JAL': 9,
+	'JMP': 10,
+	'JR': 11,
+	'LB': 12,
+	'LBI': 13,
+	'LBS': 14,
+	'LW': 15,
+	'LWI': 16,
+	'MULT': 17,
+	'NOT': 18,
+	'OR': 19,
+	'ORI': 20,
+	'RBS': 21,
+	'RET': 22,
+	'SB': 23,
+	'SBI': 24,
+	'SUB': 25,
+	'SUBI': 26,
+	'SW': 27,
+	'SWI': 28,
+	'TRAP': 29,
+	'XOR': 30,
+	'XORI': 31,
+	'HALT': 32,
+}
+
+def encode_rtype(opcode, dest, src1, src2):
+	"""
+	R-type format:
+	[opcode:6][dest:5][src1:5][src2:5][unused:11]
+	Bits: 31-26  25-21  20-16  15-11  10-0
+	"""
+	instruction = (opcode << 26) | (dest << 21) | (src1 << 16) | (src2 << 11)
+	return instruction & 0xFFFFFFFF
+
+def encode_itype(opcode, dest, src1, imm18):
+	"""
+	I-type format:
+	[opcode:6][dest:5][src1:5][imm18:18]
+	Bits: 31-26  25-21  20-16  17-0
+	"""
+	instruction = (opcode << 26) | (dest << 21) | (src1 << 16) | (imm18 & 0x3FFFF)
+	return instruction & 0xFFFFFFFF
+
+def encode_jtype(opcode, offset26):
+	"""
+	J-type format:
+	[opcode:6][offset26:26]
+	Bits: 31-26  25-0
+	"""
+	instruction = (opcode << 26) | (offset26 & 0x3FFFFFF)
+	return instruction & 0xFFFFFFFF
+
+def write_uint32_to_buffer(buffer, offset, value):
+	"""
+	Write a 32-bit unsigned integer to a byte buffer in little-endian format.
+
+	Args:
+		buffer: bytearray to write to
+		offset: byte offset in the buffer
+		value: 32-bit unsigned integer value
+	"""
+	buffer[offset:offset+4] = struct.pack('<I', value & 0xFFFFFFFF)
+
+def main():
+	# File configuration
+	file_size = 268414976  # Exactly 268,414,976 bytes
+	instr_start_offset = 0x5000  # Instructions start at 0x5000
+
+	print(f"Creating buffer of {file_size:,} bytes ({file_size / (1024*1024):.2f} MB)...")
+
+	# Create byte buffer
+	buffer = bytearray(file_size)
+
+	# Offset for writing instructions (starts at 0x5000 in the buffer)
+	offset = instr_start_offset
+
+	# List of all instructions from Instruction Set.md
+	instructions = [
+		# R-type Instructions
+		("NOP (R-type)", encode_rtype(OPCODES['NOP'], 0, 0, 0)),
+		("ADD r1, r2, r3 (R-type)", encode_rtype(OPCODES['ADD'], dest=1, src1=2, src2=3)),
+		("AND r1, r2, r3 (R-type)", encode_rtype(OPCODES['AND'], dest=1, src1=2, src2=3)),
+		("DIV r1, r2, r3 (R-type)", encode_rtype(OPCODES['DIV'], dest=1, src1=2, src2=3)),
+		("JR r1 (R-type)", encode_rtype(OPCODES['JR'], dest=0, src1=1, src2=0)),
+		("MULT r1, r2, r3 (R-type)", encode_rtype(OPCODES['MULT'], dest=1, src1=2, src2=3)),
+		("NOT r1, r2 (R-type)", encode_rtype(OPCODES['NOT'], dest=1, src1=2, src2=0)),
+		("OR r1, r2, r3 (R-type)", encode_rtype(OPCODES['OR'], dest=1, src1=2, src2=3)),
+		("SUB r1, r2, r3 (R-type)", encode_rtype(OPCODES['SUB'], dest=1, src1=2, src2=3)),
+		("XOR r1, r2, r3 (R-type)", encode_rtype(OPCODES['XOR'], dest=1, src1=2, src2=3)),
+		
+		# I-type Instructions
+		("ADDI r1, r2, 100 (I-type)", encode_itype(OPCODES['ADDI'], dest=1, src1=2, imm18=100)),
+		("ANDI r1, r2, 255 (I-type)", encode_itype(OPCODES['ANDI'], dest=1, src1=2, imm18=255)),
+		("LB r1, 50 (I-type)", encode_itype(OPCODES['LB'], dest=1, src1=0, imm18=50)),
+		("LBI r1, r2 (I-type)", encode_itype(OPCODES['LBI'], dest=1, src1=2, imm18=0)),
+		("LBS r1, r2, 2 (I-type)", encode_itype(OPCODES['LBS'], dest=1, src1=2, imm18=2)),
+		("LW r1, 200 (I-type)", encode_itype(OPCODES['LW'], dest=1, src1=0, imm18=200)),
+		("LWI r1, r2 (I-type)", encode_itype(OPCODES['LWI'], dest=1, src1=2, imm18=0)),
+		("ORI r1, r2, 128 (I-type)", encode_itype(OPCODES['ORI'], dest=1, src1=2, imm18=128)),
+		("RBS r1, r2, 3 (I-type)", encode_itype(OPCODES['RBS'], dest=1, src1=2, imm18=3)),
+		("SB r1, 50 (I-type)", encode_itype(OPCODES['SB'], dest=1, src1=0, imm18=50)),
+		("SBI r1, r2 (I-type)", encode_itype(OPCODES['SBI'], dest=1, src1=2, imm18=0)),
+		("SUBI r1, r2, 50 (I-type)", encode_itype(OPCODES['SUBI'], dest=1, src1=2, imm18=50)),
+		("SW r1, 200 (I-type)", encode_itype(OPCODES['SW'], dest=1, src1=0, imm18=200)),
+		("SWI r1, r2 (I-type)", encode_itype(OPCODES['SWI'], dest=1, src1=2, imm18=0)),
+		("XORI r1, r2, 64 (I-type)", encode_itype(OPCODES['XORI'], dest=1, src1=2, imm18=64)),
+		
+		# J-type Instructions
+		("BRN 1000 (J-type)", encode_jtype(OPCODES['BRN'], offset26=1000)),
+		("BRP 1000 (J-type)", encode_jtype(OPCODES['BRP'], offset26=1000)),
+		("BRZ 1000 (J-type)", encode_jtype(OPCODES['BRZ'], offset26=1000)),
+		("JAL 2000 (J-type)", encode_jtype(OPCODES['JAL'], offset26=2000)),
+		("JMP 3000 (J-type)", encode_jtype(OPCODES['JMP'], offset26=3000)),
+		("RET (J-type)", encode_jtype(OPCODES['RET'], offset26=0)),
+		("TRAP 0 (J-type)", encode_jtype(OPCODES['TRAP'], offset26=0)),
+	]
+
+	# Write each instruction to the buffer
+	for name, instr in instructions:
+		write_uint32_to_buffer(buffer, offset, instr)
+		print(f"{name} at offset 0x{offset:X}: 0x{instr:08X}")
+		offset += 4
+
+	# Write HALT at the end
+	halt_instr = encode_rtype(OPCODES['HALT'], dest=0, src1=0, src2=0)
+	write_uint32_to_buffer(buffer, offset, halt_instr)
+	print(f"HALT (R-type) at offset 0x{offset:X}: 0x{halt_instr:08X}")
+	offset += 4
+
+	# Rest of the buffer is already filled with zeros
+
+	# Write to binary file
+	print(f"\nWriting to dummy_file.bin...")
+	with open('dummy_file.bin', 'wb') as f:
+		f.write(buffer)
+
+	print(f"Successfully wrote dummy_file.bin")
+	print(f"File size: {file_size:,} bytes ({file_size / (1024*1024):.2f} MB)")
+	print(f"Instructions start at offset: 0x{instr_start_offset:X}")
+	print(f"Instructions encoded: {len(instructions) + 1} (including HALT)")
+	print("\nPlace this file in the same directory as the emulator and run:")
+	print("  32BitCPU dummy_file.bin")
+
+if __name__ == '__main__':
+	main()
