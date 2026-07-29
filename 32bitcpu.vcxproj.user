@@ -12,6 +12,8 @@
     <LocalDebuggerCommandArguments>dummy_file.bin</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerCommandArgumentsHistory>dummy.bin|dummy_file.bin|</LocalDebuggerCommandArgumentsHistory>
+    <LocalDebuggerDebuggerType>Auto</LocalDebuggerDebuggerType>
+    <LocalDebuggerWorkingDirectory>.</LocalDebuggerWorkingDirectory>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LocalDebuggerCommandArguments>dummy.bin</LocalDebuggerCommandArguments>

@@ -31,13 +31,14 @@ Little Endian: the least significant byte of a multi-byte value is stored at the
 The least significant byte (`0x78`) lands at the lowest address (`0x1000`), and the most significant byte (`0x12`) lands at the highest address (`0x1003`).
 However, for `LB`/`SB`/`LBI`/`SBI`, this does not matter as a single byte has no internal ordering
 ### Direct Addressing
-256 MB of address space (0x00000000-0x0FFFFFFF) is directly addressable by J-type instructions
+256 MB of address space (0x00000000-0x0FFFFFFF) is directly addressable by J-type instruction offsets
 #### Memory Map of the  LC-32
-|Region|Start|End|Size|
+|Region|Range|Size|
 | ----------- | ----------- | ----------- | ----------- |
 |Kernel Code|0x00000000-0x00000FFF | 4,096 bytes (4 KB)
 |Reserved for I/O|0x00001000-0x00004FFF | 16,384 bytes (16 KB)
-|General Purpose|0x00005000-0x0FFFFFFF | 268,414,976 bytes (~256 MB)
+|General Purpose|0x00005000-0x0FFFFFFF | 268,414,976 bytes (256 MB)
+|TOTAL|0x00000000 - 0x0FFFFFFF|268,435,456 bytes (256 MB)|
 ## Instruction Formats
 
 ### R-TYPE INSTRUCTIONS

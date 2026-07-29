@@ -169,7 +169,10 @@ void CPU::mainloop() {
 
 // R-type Instructions
 void CPU::NOP(const Instruction& instr){}
-void CPU::ADD(const Instruction& instr){}
+void CPU::ADD(const Instruction& instr){
+	instr->dest
+
+}
 void CPU::AND(const Instruction& instr){}
 void CPU::DIV(const Instruction& instr){}
 void CPU::JR(const Instruction& instr){}

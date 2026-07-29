@@ -1,4 +1,3 @@
-
 #include <iostream>
 #include <string>
 #include <fstream>
@@ -31,16 +30,21 @@ int main(int argc, char* argv[]) {
 			return 2;
 		}
 
-		std::vector<uint8_t> *bytes = new std::vector<uint8_t>(TOTAL_MEMORY_SIZE, 0);
-		auto size = fileStream.tellg();
+		std::vector<uint8_t> *bytes = new std::vector<uint8_t>(TOTAL_MEMORY_SIZE, 0); // This will become the memory of the CPU 
+
+		size_t size = fileStream.tellg();
 		fileStream.seekg(0);
 
 		if (size > GENERAL_MEMORY_SIZE) {
 			std::cout << "File is too large to load into memory. Max size is " << GENERAL_MEMORY_SIZE << " bytes." << std::endl;
 			return 3;
 		}
-
+		
 		fileStream.read(reinterpret_cast<char*>(bytes->data() + GENERAL_MEMORY_OFFSET), size);
+		if (fileStream.fail()) {
+			std::cout << "Read operation failed!" << std::endl;
+			return 4;
+		}
 		std::cout << "File loaded " << file << std::endl;
 		fileStream.close();
 

@@ -83,9 +83,8 @@ def write_uint32_to_buffer(buffer, offset, value):
 
 def main():
 	# File configuration
-	file_size = 268414976  # Exactly 268,414,976 bytes
-	instr_start_offset = 0x5000  # Instructions start at 0x5000
-
+	file_size = 268414976
+	instr_start_offset = 0
 	print(f"Creating buffer of {file_size:,} bytes ({file_size / (1024*1024):.2f} MB)...")
 
 	# Create byte buffer
