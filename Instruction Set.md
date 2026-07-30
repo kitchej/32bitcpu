@@ -1,6 +1,6 @@
 # LC-32 - Little Computer 32
 ## Architecture Overview
-### 16 Accessible Registers
+### Programmable registers
 | Name | Value | Purpose | Persists After Subroutine Call
 | ----------- | ----------- | ----------- | ----------- |
 |$R0-$R7|0-7|General Purpose | No
@@ -20,19 +20,17 @@
 |MAR| Memory Address Register|
 |MDR| Memory Data Register
 ### Endianness
-Little Endian: the least significant byte of a multi-byte value is stored at the lowest memory address. This applies uniformly to both the instruction word format (see Instruction Formats below) and to data accessed via LW/SW/LWI/SWI.
+Both data and instructions are stored in little-endian format
 
-**Example:** store a 32-bit word `0x12345678` with `SW` at base address `0x1000`:
+### Addressing
 
-|Address|0x1000|0x1001|0x1002|0x1003|
-| ----------- | ----------- | ----------- | ----------- | ----------- |
-|Byte stored|0x78|0x56|0x34|0x12|
+Most J-type instrictions and most Load/Store instructions use PC relative addressing
+Exceptioons to this are LBI, SBI, LWI, SWI, and JR which use absolute addressing via a base register
 
-The least significant byte (`0x78`) lands at the lowest address (`0x1000`), and the most significant byte (`0x12`) lands at the highest address (`0x1003`).
-However, for `LB`/`SB`/`LBI`/`SBI`, this does not matter as a single byte has no internal ordering
-### Direct Addressing
+
+#### Direct Addressing
 256 MB of address space (0x00000000-0x0FFFFFFF) is directly addressable by J-type instruction offsets
-#### Memory Map of the  LC-32
+##### Memory Map of the  LC-32
 |Region|Range|Size|
 | ----------- | ----------- | ----------- | ----------- |
 |Kernel Code|0x00000000-0x00000FFF | 4,096 bytes (4 KB)
@@ -42,11 +40,22 @@ However, for `LB`/`SB`/`LBI`/`SBI`, this does not matter as a single byte has no
 ## Instruction Formats
 
 ### R-TYPE INSTRUCTIONS
-**OPCODE** [31-26] | **DEST** [25-22] | **SRC** [21-17] | **TRGT** [16-12] | **Unused** [11-0]
+**OPCODE** [31-26: 6 bits] | **DEST** [25-21: 5 bits] | **SRC** [21-16: 5 bits] | **TRGT** [15-11: 5 bits] | **Unused** [10-0: 11 bits]
+
 ### I-TYPE INSTRUCTIONS
-**OPCODE** [31-26] | **DEST** [25-22] | **SRC** [21-18] | **IMM-16** [17-0]
+**OPCODE** [31-26: 6 bits] | **DEST** [25-21: 5 bits] | **SRC** [20-16: 5 bits] | **IMM-17** [16-0: 17 bits]
+
 ### J-TYPE INSTRUCTIONS
-**OPCODE** [26-31] | **OFFSET-26** [0-25]
+**OPCODE** [31-26: 6 bits] | **OFFSET-26** [25-0: 26 bits]
+
+#### Example encodings
+
+|Assembly|Hex|Binary|
+| ----------- | ----------- | ----------- |
+|add r0, r1, r2|0x04024000|00000100000000010001000000000000
+|addi r0, r1, 4|0x08020004|00001000000000100000000000000100
+|jmp 0x10|0x28000010|00101000000000000000000000010000
+
 ## Instruction Set
 33 of 64 possible 6-bit opcode values are assigned; 31 remain free for future instructions. Ordered by opcode.
 
@@ -54,16 +63,16 @@ However, for `LB`/`SB`/`LBI`/`SBI`, this does not matter as a single byte has no
 | ----------- | ----------- | ----------- | ----------- | ----------- | ----------- | ----------- | ----------- |
 |R|No Operation|NOP|0x00|No state change||||
 |R|Add|ADD|0x01|DEST=SRC+TRGT|DEST|SRC|TRGT
-|I|Add Immediate|ADDI|0x02|DEST=SRC+IMM18|DEST|SRC|IMM18
+|I|Add Immediate|ADDI|0x02|DEST=SRC+imm17|DEST|SRC|imm17
 |R|And|AND|0x03|DEST=SRC&TRGT|DEST|SRC|TRGT
-|I|And Immediate|ANDI|0x04|DEST=SRC&IMM18|DEST|SRC|IMM18
+|I|And Immediate|ANDI|0x04|DEST=SRC&imm17|DEST|SRC|imm17
 |J|Branch if Negative|BRN|0x05|PC=PC+4+(OFFSET*4)|OFFSET26||
 |J|Branch if Positive|BRP|0x06|PC=PC+4+(OFFSET*4)|OFFSET26||
 |J|Branch if Zero|BRZ|0x07|PC=PC+4+(OFFSET*4)|OFFSET26||
 |R|Divide|DIV|0x08|DEST=SRC/TRGT (rounds toward zero)|DEST|SRC|TRGT
 |J|Jump and Link|JAL|0x09|PC=PC+4+(OFFSET*4)|OFFSET26||
 |J|Jump|JMP|0x0A|PC=PC+4+(OFFSET*4)|OFFSET26||
-|R|Jump Register|JR|0x0B|PC=SRC|SRC||
+|R|Jump Register|JR|0x0B|PC=SRC + 4|SRC||
 |I|Load Byte|LB|0x0C|DEST=MEM[PC+4+OFFSET]|DEST|OFFSET18|
 |I|Load Byte Indirect|LBI|0x0D|DEST=MEM[BASE REG]|DEST|BASE REG|
 |I|Left Bit Shift|LBS|0x0E|DEST=SRC<<SHIFT AMT|DEST|SRC|SHIFT AMT
@@ -72,16 +81,16 @@ However, for `LB`/`SB`/`LBI`/`SBI`, this does not matter as a single byte has no
 |R|Multiply|MULT|0x11|DEST=SRC*TRGT|DEST|SRC|TRGT
 |R|Logical Not|NOT|0x12|DEST=~SRC|DEST|SRC|
 |R|Inclusive Or|OR|0x13|DEST=SRC\|TRGT|DEST|SRC|TRGT
-|I|Inclusive Or Immediate|ORI|0x14|DEST=SRC\|IMM18|DEST|SRC|IMM18
+|I|Inclusive Or Immediate|ORI|0x14|DEST=SRC\|imm17|DEST|SRC|imm17
 |I|Right Bit Shift|RBS|0x15|DEST=SRC>>SHIFT AMT|DEST|SRC|SHIFT AMT
 |J|Return from Subroutine|RET|0x16|PC=$RA||||
 |I|Store Byte|SB|0x17|MEM[PC+4+OFFSET]=SRC|SRC|OFFSET18|
 |I|Store Byte Indirect|SBI|0x18|MEM[BASE REG]=SRC|SRC|BASE REG|
 |R|Subtract|SUB|0x19|DEST=SRC-TRGT|DEST|SRC|TRGT
-|I|Subtract Immediate|SUBI|0x1A|DEST=SRC-IMM18|DEST|SRC|IMM18
+|I|Subtract Immediate|SUBI|0x1A|DEST=SRC-imm17|DEST|SRC|imm17
 |I|Store Word|SW|0x1B|MEM[PC+4+(OFFSET*4)]=SRC|SRC|OFFSET18|
 |I|Store Word Indirect|SWI|0x1C|MEM[BASE REG]=SRC|SRC|BASE REG|
 |J|Trap|TRAP|0x1D|PC=0+(OFFSET*4)|OFFSET26||
 |R|Exclusive Or|XOR|0x1E|DEST=SRC^TRGT|DEST|SRC|TRGT
-|I|Exclusive Or Immediate|XORI|0x1F|DEST=SRC^IMM18|DEST|SRC|
+|I|Exclusive Or Immediate|XORI|0x1F|DEST=SRC^imm17|DEST|SRC|
 |R|Halt|HALT|0x20|Stop instruction execution||||

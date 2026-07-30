@@ -52,14 +52,15 @@ int main(int argc, char* argv[]) {
 		Load modules here
 		*/
 
-		/*MMU* mmu = new MMU(bytes);
-		uint8_t testByte = mmu->readByte(GENERAL_MEMORY_OFFSET);
-		uint32_t testWord = mmu->readWord(GENERAL_MEMORY_OFFSET);
+		MMU* mmu = new MMU(bytes);
+		uint8_t testByte = mmu->readByte(GENERAL_MEMORY_OFFSET + 4);
+		uint32_t testWord = mmu->readWord(GENERAL_MEMORY_OFFSET + 4);
 
-		delete mmu;*/
+		delete mmu;
 
-		CPU* cpu = new CPU(bytes);
-		cpu->mainloop();
+		//CPU* cpu = new CPU(bytes);
+
+		//cpu->mainloop();
 
 		return 0;
 }

@@ -5,6 +5,8 @@
 #include <map>
 #include "mmu.h"
 
+#define DISABLE_JUMPS true
+
 class CPU;
 
 enum class Opcode : uint8_t {
@@ -43,12 +45,32 @@ enum class Opcode : uint8_t {
 	HALT
 };
 
+enum class Register : uint8_t {
+	R0 = 0,
+	R1,
+	R2,
+	R3,
+	R4,
+	R5,
+	R6,
+	R7,
+	RA,
+	A0,
+	A1,
+	A2,
+	V0,
+	V1,
+	SP,
+	SF
+
+};
+
 typedef struct Instruction {
 	Opcode opcode;
 	uint8_t dest;
-	uint8_t src1;
-	uint8_t src2;
-	uint32_t imm18;
+	uint8_t src;
+	uint8_t trgt;
+	uint32_t imm17;
 	uint32_t offset26;
 } Instruction;
 
@@ -56,33 +78,45 @@ using OP_FPTR = void (CPU::*)(const Instruction&);
 
 class CPU {
 private:
-	// Bit masks for field extraction
-	static constexpr uint32_t MASK_18BIT = 0x3FFFF;      // 18 bits: 111111111111111111
-	static constexpr uint32_t MASK_26BIT = 0x3FFFFFF;    // 26 bits: 11111111111111111111111111
+	// Bit masks
+	static constexpr uint32_t MASK_17BIT = 0x1FFFF;
+	static constexpr uint32_t MASK_26BIT = 0x3FFFFFF;
 	static constexpr uint8_t MASK_5BIT = 0x1F;
-	// Flags
-	bool N_FLAG;
-	bool P_FLAG;
-	bool Z_FLAG;
+	static constexpr uint8_t MASK_6BIT = 0x3F;
 	// General Purpose Regesters
 	uint32_t r0, r1, r2, r3, r4, r5, r6, r7;
 	// Special Purpose Regesters
 	uint32_t a0, a1, a2;
 	uint32_t v0, v1;
 	uint32_t sp, sf;
+	uint32_t ra;
 	// Internal Registers
 	uint32_t pc, ir, mar, mdr;
+	// Flags
+	bool N_FLAG;
+	bool P_FLAG;
+	bool Z_FLAG;
+	bool D_ZERO;
+	bool HALT_FLAG;
+
+	// Classes
 	MMU* mmu;
 
+	// Data Structures
 	std::map<Opcode, std::vector<std::string>> instructionFormats;
-	std::vector<OP_FPTR> op_table;
+	std::vector<OP_FPTR> opTable;
+	std::map<Register, uint32_t*> registerFile;
 
+	// CPU Execution Methods
+	void set_flags(Register address);
+	void clear_flags();
 	void fetch_instruction();
 	Instruction decode_instruction();
+	void decode_rtype(uint32_t instr, Instruction& instrInfo);
+	void decode_itype(uint32_t instr, Instruction& instrInfo);
+	void decode_jtype(uint32_t instr, Instruction& instrInfo);
 	void execute_instruction(const Instruction& instr);
-	void decode_rtype(uint32_t instr, std::vector<std::string> argtypes, Instruction& instrInfo);
-	void decode_itype(uint32_t instr, std::vector<std::string> argtypes, Instruction& instrInfo);
-	void decode_jtype(uint32_t instr, std::vector<std::string> argtypes, Instruction& instrInfo);
+	// Initialzation methods
 	void initialize_registers();
 	void initialize_instruction_tables();
 
@@ -96,6 +130,9 @@ public:
 
 	void mainloop();
 	void reset();
+	uint32_t peek_reg(Register address);
+	void poke_reg(Register address, uint32_t value);
+
 
 	// R-type Instructions
 	void NOP(const Instruction& instr);

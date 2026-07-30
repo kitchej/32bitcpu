@@ -20,9 +20,9 @@ public:
 	MMU();
 	MMU(std::vector<uint8_t>* buffer);
 	~MMU();
-	void writeByte(uint32_t address, uint8_t value);
+	void writeByte(uint32_t address, uint32_t value);
 	void writeWord(uint32_t address, uint32_t value);
-	uint8_t readByte(uint32_t address);
+	uint32_t readByte(uint32_t address);
 	uint32_t readWord(uint32_t address);
 
 };

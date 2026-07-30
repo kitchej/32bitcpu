@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 """
+!!! AI GENERATED !!!
+(But perfected by yours truly)
+
 Generates a binary file with encoded instructions for each format type.
 Creates a byte array spanning from 0x00005000 to 0x0FFFFFFF
 """
@@ -43,22 +46,20 @@ OPCODES = {
 	'HALT': 32,
 }
 
-def encode_rtype(opcode, dest, src1, src2):
+def encode_rtype(opcode, dest, src, trgt):
 	"""
 	R-type format:
-	[opcode:6][dest:5][src1:5][src2:5][unused:11]
-	Bits: 31-26  25-21  20-16  15-11  10-0
+	**OPCODE** [31-26: 6 bits] | **DEST** [25-22: 4 bits] | **SRC** [21-18: 4 bits] | **TRGT** [17-14: 4 bits] | **Unused** [13-0: 14 bits]
 	"""
-	instruction = (opcode << 26) | (dest << 21) | (src1 << 16) | (src2 << 11)
+	instruction = (opcode << 26) | (dest << 21) | (src << 16) | (trgt << 11)
 	return instruction & 0xFFFFFFFF
 
-def encode_itype(opcode, dest, src1, imm18):
+def encode_itype(opcode, dest, src, imm17):
 	"""
 	I-type format:
-	[opcode:6][dest:5][src1:5][imm18:18]
-	Bits: 31-26  25-21  20-16  17-0
+	**OPCODE** [31-26] | **DEST** [25-22] | **SRC** [21-18] | **IMM-17** [17-0]
 	"""
-	instruction = (opcode << 26) | (dest << 21) | (src1 << 16) | (imm18 & 0x3FFFF)
+	instruction = (opcode << 26) | (dest << 21) | (src << 17) | (imm17 & 0x0002FFFF)
 	return instruction & 0xFFFFFFFF
 
 def encode_jtype(opcode, offset26):
@@ -81,6 +82,19 @@ def write_uint32_to_buffer(buffer, offset, value):
 	"""
 	buffer[offset:offset+4] = struct.pack('<I', value & 0xFFFFFFFF)
 
+def print_word_hexdump(buffer, start_offset, end_offset):
+	"""
+	Print a 4-byte-per-row hexdump of the buffer, reading each row as a
+	little-endian uint32_t (matching MMU::readWord's byte assembly), so the
+	printed value is exactly what the CPU will decode -- no manual byte
+	reversal needed to compare against expected instruction values.
+
+	Equivalent to: hexdump -e '"%08_ax: " 1/4 "%08x" "\\n"' dummy_file.bin
+	"""
+	for offset in range(start_offset, end_offset, 4):
+		word = struct.unpack_from('<I', buffer, offset)[0]
+		print(f"{offset:08x}: {word:08x}")
+
 def main():
 	# File configuration
 	file_size = 268414976
@@ -93,58 +107,53 @@ def main():
 	# Offset for writing instructions (starts at 0x5000 in the buffer)
 	offset = instr_start_offset
 
-	# List of all instructions from Instruction Set.md
+	# List of all instructions, ordered to match the Opcode enum / opTable in CPU.cpp
 	instructions = [
-		# R-type Instructions
 		("NOP (R-type)", encode_rtype(OPCODES['NOP'], 0, 0, 0)),
-		("ADD r1, r2, r3 (R-type)", encode_rtype(OPCODES['ADD'], dest=1, src1=2, src2=3)),
-		("AND r1, r2, r3 (R-type)", encode_rtype(OPCODES['AND'], dest=1, src1=2, src2=3)),
-		("DIV r1, r2, r3 (R-type)", encode_rtype(OPCODES['DIV'], dest=1, src1=2, src2=3)),
-		("JR r1 (R-type)", encode_rtype(OPCODES['JR'], dest=0, src1=1, src2=0)),
-		("MULT r1, r2, r3 (R-type)", encode_rtype(OPCODES['MULT'], dest=1, src1=2, src2=3)),
-		("NOT r1, r2 (R-type)", encode_rtype(OPCODES['NOT'], dest=1, src1=2, src2=0)),
-		("OR r1, r2, r3 (R-type)", encode_rtype(OPCODES['OR'], dest=1, src1=2, src2=3)),
-		("SUB r1, r2, r3 (R-type)", encode_rtype(OPCODES['SUB'], dest=1, src1=2, src2=3)),
-		("XOR r1, r2, r3 (R-type)", encode_rtype(OPCODES['XOR'], dest=1, src1=2, src2=3)),
-		
-		# I-type Instructions
-		("ADDI r1, r2, 100 (I-type)", encode_itype(OPCODES['ADDI'], dest=1, src1=2, imm18=100)),
-		("ANDI r1, r2, 255 (I-type)", encode_itype(OPCODES['ANDI'], dest=1, src1=2, imm18=255)),
-		("LB r1, 50 (I-type)", encode_itype(OPCODES['LB'], dest=1, src1=0, imm18=50)),
-		("LBI r1, r2 (I-type)", encode_itype(OPCODES['LBI'], dest=1, src1=2, imm18=0)),
-		("LBS r1, r2, 2 (I-type)", encode_itype(OPCODES['LBS'], dest=1, src1=2, imm18=2)),
-		("LW r1, 200 (I-type)", encode_itype(OPCODES['LW'], dest=1, src1=0, imm18=200)),
-		("LWI r1, r2 (I-type)", encode_itype(OPCODES['LWI'], dest=1, src1=2, imm18=0)),
-		("ORI r1, r2, 128 (I-type)", encode_itype(OPCODES['ORI'], dest=1, src1=2, imm18=128)),
-		("RBS r1, r2, 3 (I-type)", encode_itype(OPCODES['RBS'], dest=1, src1=2, imm18=3)),
-		("SB r1, 50 (I-type)", encode_itype(OPCODES['SB'], dest=1, src1=0, imm18=50)),
-		("SBI r1, r2 (I-type)", encode_itype(OPCODES['SBI'], dest=1, src1=2, imm18=0)),
-		("SUBI r1, r2, 50 (I-type)", encode_itype(OPCODES['SUBI'], dest=1, src1=2, imm18=50)),
-		("SW r1, 200 (I-type)", encode_itype(OPCODES['SW'], dest=1, src1=0, imm18=200)),
-		("SWI r1, r2 (I-type)", encode_itype(OPCODES['SWI'], dest=1, src1=2, imm18=0)),
-		("XORI r1, r2, 64 (I-type)", encode_itype(OPCODES['XORI'], dest=1, src1=2, imm18=64)),
-		
-		# J-type Instructions
-		("BRN 1000 (J-type)", encode_jtype(OPCODES['BRN'], offset26=1000)),
-		("BRP 1000 (J-type)", encode_jtype(OPCODES['BRP'], offset26=1000)),
-		("BRZ 1000 (J-type)", encode_jtype(OPCODES['BRZ'], offset26=1000)),
-		("JAL 2000 (J-type)", encode_jtype(OPCODES['JAL'], offset26=2000)),
-		("JMP 3000 (J-type)", encode_jtype(OPCODES['JMP'], offset26=3000)),
+		("ADD r1, r1, r3 (R-type)", encode_rtype(OPCODES['ADD'], dest=1, src=1, trgt=2)),
+		("ADDI r1, r2, 100 (I-type)", encode_itype(OPCODES['ADDI'], dest=1, src=1, imm17=100)),
+		("AND r1, r2, r3 (R-type)", encode_rtype(OPCODES['AND'], dest=1, src=2, trgt=3)),
+		("ANDI r1, r2, 255 (I-type)", encode_itype(OPCODES['ANDI'], dest=1, src=2, imm17=255)),
+		("BRN 1000 (J-type)", encode_jtype(OPCODES['BRN'], offset26=6)),
+		("BRP 1000 (J-type)", encode_jtype(OPCODES['BRP'], offset26=5)),
+		("BRZ 1000 (J-type)", encode_jtype(OPCODES['BRZ'], offset26=4)),
+		("DIV r1, r2, r3 (R-type)", encode_rtype(OPCODES['DIV'], dest=1, src=2, trgt=3)),
+		("JAL 2000 (J-type)", encode_jtype(OPCODES['JAL'], offset26=3)),
+		("JMP 3000 (J-type)", encode_jtype(OPCODES['JMP'], offset26=2)),
+		("JR r1 (R-type)", encode_rtype(OPCODES['JR'], dest=0, src=1, trgt=0)),
+		("LB r1, 50 (I-type)", encode_itype(OPCODES['LB'], dest=1, src=0, imm17=50)),
+		("LBI r1, r2 (I-type)", encode_itype(OPCODES['LBI'], dest=1, src=2, imm17=0)),
+		("LBS r1, r2, 2 (I-type)", encode_itype(OPCODES['LBS'], dest=1, src=2, imm17=2)),
+		("LW r1, 200 (I-type)", encode_itype(OPCODES['LW'], dest=1, src=0, imm17=200)),
+		("LWI r1, r2 (I-type)", encode_itype(OPCODES['LWI'], dest=1, src=2, imm17=0)),
+		("MULT r1, r2, r3 (R-type)", encode_rtype(OPCODES['MULT'], dest=1, src=2, trgt=3)),
+		("NOT r1, r2 (R-type)", encode_rtype(OPCODES['NOT'], dest=1, src=2, trgt=0)),
+		("OR r1, r2, r3 (R-type)", encode_rtype(OPCODES['OR'], dest=1, src=2, trgt=3)),
+		("ORI r1, r2, 128 (I-type)", encode_itype(OPCODES['ORI'], dest=1, src=2, imm17=128)),
+		("RBS r1, r2, 3 (I-type)", encode_itype(OPCODES['RBS'], dest=1, src=2, imm17=3)),
 		("RET (J-type)", encode_jtype(OPCODES['RET'], offset26=0)),
-		("TRAP 0 (J-type)", encode_jtype(OPCODES['TRAP'], offset26=0)),
+		("SB r1, 50 (I-type)", encode_itype(OPCODES['SB'], dest=1, src=0, imm17=50)),
+		("SBI r1, r2 (I-type)", encode_itype(OPCODES['SBI'], dest=1, src=2, imm17=0)),
+		("SUB r1, r2, r3 (R-type)", encode_rtype(OPCODES['SUB'], dest=1, src=2, trgt=3)),
+		("SUBI r1, r2, 50 (I-type)", encode_itype(OPCODES['SUBI'], dest=1, src=2, imm17=50)),
+		("SW r1, 200 (I-type)", encode_itype(OPCODES['SW'], dest=1, src=0, imm17=200)),
+		("SWI r1, r2 (I-type)", encode_itype(OPCODES['SWI'], dest=1, src=2, imm17=0)),
+		("TRAP 0 (J-type)", encode_jtype(OPCODES['TRAP'], offset26=1)),
+		("XOR r1, r2, r3 (R-type)", encode_rtype(OPCODES['XOR'], dest=1, src=2, trgt=3)),
+		("XORI r1, r2, 64 (I-type)", encode_itype(OPCODES['XORI'], dest=1, src=2, imm17=64)),
 	]
-
-	# Write each instruction to the buffer
 	for name, instr in instructions:
 		write_uint32_to_buffer(buffer, offset, instr)
 		print(f"{name} at offset 0x{offset:X}: 0x{instr:08X}")
 		offset += 4
 
 	# Write HALT at the end
-	halt_instr = encode_rtype(OPCODES['HALT'], dest=0, src1=0, src2=0)
+	halt_instr = encode_rtype(OPCODES['HALT'], dest=0, src=0, trgt=0)
 	write_uint32_to_buffer(buffer, offset, halt_instr)
 	print(f"HALT (R-type) at offset 0x{offset:X}: 0x{halt_instr:08X}")
 	offset += 4
+
+	end_offset = offset  # remember where real instructions end, before writing file
 
 	# Rest of the buffer is already filled with zeros
 
@@ -157,6 +166,13 @@ def main():
 	print(f"File size: {file_size:,} bytes ({file_size / (1024*1024):.2f} MB)")
 	print(f"Instructions start at offset: 0x{instr_start_offset:X}")
 	print(f"Instructions encoded: {len(instructions) + 1} (including HALT)")
+
+	# Read back and print a 4-byte-per-row word hexdump of just the
+	# instruction region, so it's directly comparable to the printed
+	# encoded values above and to what MMU::readWord will decode.
+	print(f"\nWord hexdump of instruction region (offset 0x0 - 0x{end_offset:X}):")
+	print_word_hexdump(buffer, instr_start_offset, end_offset)
+
 	print("\nPlace this file in the same directory as the emulator and run:")
 	print("  32BitCPU dummy_file.bin")
 
