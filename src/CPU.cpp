@@ -14,7 +14,7 @@ void CPU::initialize_instruction_tables() {
 	instructionFormats[Opcode::DIV] = {"R-type", "dest", "src1", "src2"};
 	instructionFormats[Opcode::JAL] = {"J-type", "offset26"};
 	instructionFormats[Opcode::JMP] = {"J-type", "offset26"};
-	instructionFormats[Opcode::JR] = {"R-type", "src1"};
+	instructionFormats[Opcode::JALA] = {"R-type", "src1"};
 	instructionFormats[Opcode::LB] = {"I-type", "dest", "src1", "imm17"};
 	instructionFormats[Opcode::LBI] = {"I-type", "dest", "imm17"};
 	instructionFormats[Opcode::LBS] = {"I-type", "dest", "src1", "imm17"};
@@ -48,7 +48,7 @@ void CPU::initialize_instruction_tables() {
 		&CPU::DIV,
 		&CPU::JAL,
 		&CPU::JMP,
-		&CPU::JR,
+		&CPU::JALA,
 		&CPU::LB,
 		&CPU::LBI,
 		&CPU::LBS,
@@ -222,7 +222,7 @@ void CPU::set_flags(Register address) {
 	
 }
 
-// R-type Instructions (Except JR)
+// R-type Instructions (Except JALA)
 void CPU::NOP(const Instruction& instr) { clear_flags(); }
 void CPU::ADD(const Instruction& instr){
 	*registerFile[(Register)instr.dest] = (*registerFile[(Register)instr.src]) + *registerFile[(Register)instr.trgt];
@@ -371,35 +371,50 @@ void CPU::XORI(const Instruction& instr){
 #if !DISABLE_JUMPS
 
 // J-type Instructions
-void CPU::JR(const Instruction& instr) {
+void CPU::JALA(const Instruction& instr) {
+	ra = pc;
 	pc = *registerFile[(Register)instr.src];
 	clear_flags();
 }
 void CPU::BRN(const Instruction& instr) {
+	if (N_FLAG) {
+		pc += (instr.offset26) * 4;
+	}
 	clear_flags();
 }
 void CPU::BRP(const Instruction& instr) {
+	if (P_FLAG) {
+		pc += (instr.offset26) * 4;
+	}
 	clear_flags();
 }
 void CPU::BRZ(const Instruction& instr) {
+	if (Z_FLAG) {
+		pc += (instr.offset26) * 4;
+	}
 	clear_flags();
 }
 void CPU::JAL(const Instruction& instr) {
+	ra = pc;
+	pc += (instr.offset26) * 4;
 	clear_flags();
 }
 void CPU::JMP(const Instruction& instr) {
+	pc += (instr.offset26) * 4;
 	clear_flags();
 }
 void CPU::RET(const Instruction& instr) {
+	pc = ra;
 	clear_flags();
 }
 void CPU::TRAP(const Instruction& instr) {
+	// We'll look at this again when we implment the kernel
 	clear_flags();
 }
 
 #else
 
-void CPU::JR(const Instruction& instr) {
+void CPU::JALA(const Instruction& instr) {
 	clear_flags();
 }
 void CPU::BRN(const Instruction& instr) {

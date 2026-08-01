@@ -25,7 +25,7 @@ Both data and instructions are stored in little-endian format
 ### Addressing
 
 Most J-type instrictions and most Load/Store instructions use PC relative addressing
-Exceptioons to this are LBI, SBI, LWI, SWI, and JR which use absolute addressing via a base register
+Exceptioons to this are LBI, SBI, LWI, SWI, and JALA which use absolute addressing via a base register
 
 
 #### Direct Addressing
@@ -70,9 +70,9 @@ Exceptioons to this are LBI, SBI, LWI, SWI, and JR which use absolute addressing
 |J|Branch if Positive|BRP|0x06|PC=PC+4+(OFFSET*4)|OFFSET26||
 |J|Branch if Zero|BRZ|0x07|PC=PC+4+(OFFSET*4)|OFFSET26||
 |R|Divide|DIV|0x08|DEST=SRC/TRGT (rounds toward zero)|DEST|SRC|TRGT
-|J|Jump and Link|JAL|0x09|PC=PC+4+(OFFSET*4)|OFFSET26||
+|J|Jump and Link|JAL|0x09|PC=PC+4+(OFFSET*4); ra=pc + 4|OFFSET26||
 |J|Jump|JMP|0x0A|PC=PC+4+(OFFSET*4)|OFFSET26||
-|R|Jump Register|JR|0x0B|PC=SRC + 4|SRC||
+|R|Jump and Link Absolute|JAlA|0x0B|PC=SRC + 4; ra=pc = 4|SRC||
 |I|Load Byte|LB|0x0C|DEST=MEM[PC+4+OFFSET]|DEST|OFFSET18|
 |I|Load Byte Indirect|LBI|0x0D|DEST=MEM[BASE REG]|DEST|BASE REG|
 |I|Left Bit Shift|LBS|0x0E|DEST=SRC<<SHIFT AMT|DEST|SRC|SHIFT AMT

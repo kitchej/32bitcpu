@@ -127,6 +127,9 @@
     <None Include=".gitignore" />
     <None Include="create_dummy_file.py" />
     <None Include="Instruction Set.md" />
+    <None Include="tests\32bitcpu.Tests.vcxproj" />
+    <None Include="tests\32bitcpu.Tests.vcxproj.filters" />
+    <None Include="tests\README.md" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />

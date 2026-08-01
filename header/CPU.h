@@ -5,7 +5,7 @@
 #include <map>
 #include "mmu.h"
 
-#define DISABLE_JUMPS true
+#define DISABLE_JUMPS false
 
 class CPU;
 
@@ -21,7 +21,7 @@ enum class Opcode : uint8_t {
 	DIV,
 	JAL,
 	JMP,
-	JR,
+	JALA,
 	LB,
 	LBI,
 	LBS,
@@ -139,7 +139,7 @@ public:
 	void ADD(const Instruction& instr);
 	void AND(const Instruction& instr);
 	void DIV(const Instruction& instr);
-	void JR(const Instruction& instr);
+	void JALA(const Instruction& instr);
 	void MULT(const Instruction& instr);
 	void NOT(const Instruction& instr);
 	void OR(const Instruction& instr);
