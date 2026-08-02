@@ -10,7 +10,7 @@ Creates a byte array spanning from 0x00005000 to 0x0FFFFFFF
 import struct
 from sys import byteorder
 MAX_UINT_32 = 0xFFFFFFFF
-JUMPS_ONLY = True
+JUMPS_ONLY = False
 FILE_SIZE = 268414976
 INSTRUCT_OFFSET = 0
 DATA_OFFSET = 0
@@ -55,7 +55,7 @@ OPCODES = {
 def encode_rtype(opcode, dest, src, trgt):
 	"""
 	R-type format:
-	**OPCODE** [31-26: 6 bits] | **DEST** [25-22: 4 bits] | **SRC** [21-18: 4 bits] | **TRGT** [17-14: 4 bits] | **Unused** [13-0: 14 bits]
+	**OPCODE** [31-26: 6 bits] | **DEST** [25-21: 5 bits] | **SRC** [21-16: 5 bits] | **TRGT** [15-11: 5 bits] | **Unused** [10-0: 11 bits]
 	"""
 	instruction = (opcode << 26) | (dest << 21) | (src << 16) | (trgt << 11)
 	return instruction & 0xFFFFFFFF
@@ -63,9 +63,9 @@ def encode_rtype(opcode, dest, src, trgt):
 def encode_itype(opcode, dest, src, imm17):
 	"""
 	I-type format:
-	**OPCODE** [31-26] | **DEST** [25-22] | **SRC** [21-18] | **IMM-17** [17-0]
+	**OPCODE** [31-26: 6 bits] | **DEST** [25-21: 5 bits] | **SRC** [20-16: 5 bits] | **IMM-17** [16-0: 17 bits]
 	"""
-	instruction = (opcode << 26) | (dest << 21) | (src << 17) | (imm17 & 0x0002FFFF)
+	instruction = (opcode << 26) | (dest << 21) | (src << 17) | (imm17 & 0x1FFFF)
 	return instruction & 0xFFFFFFFF
 
 def encode_jtype(opcode, offset26):
@@ -115,15 +115,15 @@ def main():
 			MAX_UINT_32,
 			encode_jtype(OPCODES['JAL'], offset26=1),
 			MAX_UINT_32,
-			encode_jtype(OPCODES['JALR'], offset26=1),
+			encode_jtype(OPCODES['JALA'], offset26=1),
 			MAX_UINT_32,
 
 		]
 	else:
 		instructions = [
+			encode_itype(OPCODES['ADDI'], dest=1, src=1, imm17=-1),
 			encode_rtype(OPCODES['NOP'], 0, 0, 0),
 			encode_rtype(OPCODES['ADD'], dest=1, src=1, trgt=2),
-			encode_itype(OPCODES['ADDI'], dest=1, src=1, imm17=100),
 			encode_rtype(OPCODES['AND'], dest=1, src=2, trgt=3),
 			encode_itype(OPCODES['ANDI'], dest=1, src=2, imm17=255),
 			encode_jtype(OPCODES['BRN'], offset26=6),

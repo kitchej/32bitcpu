@@ -1,0 +1,1 @@
+- Add new 5 bit field to r-type instructions called shamt (shift amount) and make RBS and LBS r-types

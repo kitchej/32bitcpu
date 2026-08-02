@@ -2,6 +2,7 @@
 #include <iostream>
 #include "../header/CPU.h"
 
+
 void CPU::initialize_instruction_tables() {
 	instructionFormats[Opcode::NOP] = {"R-type"};
 	instructionFormats[Opcode::ADD] = {"R-type", "dest", "src1", "src2"};
@@ -173,6 +174,13 @@ void CPU::execute_instruction(const Instruction& instr) {
 	(this->*opTable[op_index])(instr);
 }
 
+void CPU::sign_extend_imm17(uint32_t &value) {
+	int32_t imm17 = (int32_t)value;
+	imm17 = imm17 << 15;
+	imm17 = imm17 >> 15;
+	value = (uint32_t)imm17;
+}
+
 void CPU::reset() {
 	initialize_registers();
 }
@@ -280,14 +288,17 @@ void CPU::HALT(const Instruction& instr){
 
 
 // I-type Instructions
-// TO-DO: SIGN EXTEND IMM17 VALUES
 void CPU::ADDI(const Instruction& instr){
-	*registerFile[(Register)instr.dest] = (*registerFile[(Register)instr.src]) + instr.imm17;
+	uint32_t imm17 = instr.imm17;
+	sign_extend_imm17(imm17);
+	*registerFile[(Register)instr.dest] = (*registerFile[(Register)instr.src]) + imm17;
 	clear_flags();
 	set_flags((Register)instr.dest);
 }
 void CPU::ANDI(const Instruction& instr) {
-	*registerFile[(Register)instr.dest] = (*registerFile[(Register)instr.src]) + instr.imm17;
+	uint32_t imm17 = instr.imm17;
+	sign_extend_imm17(imm17);
+	*registerFile[(Register)instr.dest] = (*registerFile[(Register)instr.src]) & imm17;
 	clear_flags();
 	set_flags((Register)instr.dest);
 }
@@ -319,8 +330,10 @@ void CPU::LWI(const Instruction& instr){
 	*registerFile[(Register)instr.dest] = mdr;
 	clear_flags();
 }
-void CPU::ORI(const Instruction& instr){ 
-	*registerFile[(Register)instr.dest] = (*registerFile[(Register)instr.src]) | instr.imm17;
+void CPU::ORI(const Instruction& instr){
+	uint32_t imm17 = instr.imm17;
+	sign_extend_imm17(imm17);
+	*registerFile[(Register)instr.dest] = (*registerFile[(Register)instr.src]) | imm17;
 	clear_flags();
 	set_flags((Register)instr.dest);
 }
@@ -328,6 +341,7 @@ void CPU::RBS(const Instruction& instr){
 	*registerFile[(Register)instr.dest] = (*registerFile[(Register)instr.src]) >> instr.imm17;
 	clear_flags();
 }
+
 void CPU::SB(const Instruction& instr){
 	mar = instr.imm17 + pc;
 	mdr = *registerFile[(Register)instr.src];
@@ -363,7 +377,9 @@ void CPU::SWI(const Instruction& instr){
 	clear_flags();
 }
 void CPU::XORI(const Instruction& instr){
-	*registerFile[(Register)instr.dest] = (*registerFile[(Register)instr.src]) ^ instr.imm17;
+	uint32_t imm17 = instr.imm17;
+	sign_extend_imm17(imm17);
+	*registerFile[(Register)instr.dest] = (*registerFile[(Register)instr.src]) ^ imm17;
 	clear_flags();
 	set_flags((Register)instr.dest);
 }
