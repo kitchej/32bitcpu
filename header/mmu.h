@@ -3,6 +3,8 @@
 
 #include <vector>
 #include <cstdint>
+#include <mutex>
+
 #define TOTAL_MEMORY_SIZE 268435456 // ~256 MB
 #define GENERAL_MEMORY_SIZE 268414976  // ~256 MB
 #define KERNAL_MEMORY_SIZE 4096 // ~4 KB
@@ -14,6 +16,7 @@
 class MMU {
 	
 	std::vector<uint8_t>* memoryBuffer;
+	std::mutex memoryLock;
 
 
 public:

@@ -129,16 +129,19 @@
     <None Include="Instruction Set.md" />
     <None Include="tests\32bitcpu.Tests.vcxproj" />
     <None Include="tests\32bitcpu.Tests.vcxproj.filters" />
-    <None Include="tests\README.md" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="src\BasicIODevice.cpp" />
     <ClCompile Include="src\CPU.cpp" />
     <ClCompile Include="src\mmu.cpp" />
+    <ClCompile Include="src\WinKeyboard.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="header\BasicIODevice.h" />
     <ClInclude Include="header\CPU.h" />
     <ClInclude Include="header\mmu.h" />
+    <ClInclude Include="header\WinKeyboard.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="TODO.txt" />

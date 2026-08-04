@@ -3,3 +3,6 @@
 .git/
 32bitcpu/
 x64/
+Debug/
+*.vcxproj
+*.filters
