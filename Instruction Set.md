@@ -1,5 +1,11 @@
 # LC-32 - Little Computer 32
 ## Architecture Overview
+
+| |
+| ----------- | ----------- | ----------- | ----------- |
+|**Word Size**|32 Bits||
+|**Endianess**|Little||
+|**Addressing modes**|PC relative and register indirect||
 ### Programmable registers
 | Name | Value | Purpose | Persists After Subroutine Call
 | ----------- | ----------- | ----------- | ----------- |
@@ -17,14 +23,14 @@
 |P| Positive Flag
 |N| Negative Flag
 |IR| Instruction Register
-|MAR| Memory Address Register|
+|MAR| Memory Address Register
 |MDR| Memory Data Register
 ### Endianness
 Both data and instructions are stored in little-endian format
 
 ### Addressing
 
-Most J-type instrictions and most Load/Store instructions use PC relative addressing
+Most J-type instructions and most Load/Store instructions use PC relative addressing
 Exceptioons to this are LBI, SBI, LWI, SWI, and JALA which use absolute addressing via a base register
 
 
@@ -33,9 +39,9 @@ Exceptioons to this are LBI, SBI, LWI, SWI, and JALA which use absolute addressi
 ##### Memory Map of the  LC-32
 |Region|Range|Size|
 | ----------- | ----------- | ----------- | ----------- |
-|Kernel Code|0x00000000-0x00000FFF | 4,096 bytes (4 KB)
-|Reserved for I/O|0x00001000-0x00004FFF | 16,384 bytes (16 KB)
-|General Purpose|0x00005000-0x0FFFFFFF | 268,414,976 bytes (256 MB)
+|Kernel Code|0x00000000-0x00003FFF | 16,384 bytes (16 KB)
+|Reserved for I/O|0x00004000-0x00013FFF | 65,536 bytes (64 KB)
+|General Purpose|0x00014000-0x0FFFFFFF | 268,353,536 bytes (256 MB)
 |TOTAL|0x00000000 - 0x0FFFFFFF|268,435,456 bytes (256 MB)|
 ## Instruction Formats
 

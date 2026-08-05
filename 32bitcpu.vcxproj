@@ -135,12 +135,15 @@
     <ClCompile Include="src\BasicIODevice.cpp" />
     <ClCompile Include="src\CPU.cpp" />
     <ClCompile Include="src\mmu.cpp" />
+    <ClCompile Include="src\Terminal.cpp" />
     <ClCompile Include="src\WinKeyboard.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="header\BasicIODevice.h" />
     <ClInclude Include="header\CPU.h" />
+    <ClInclude Include="header\InputDevice.h" />
     <ClInclude Include="header\mmu.h" />
+    <ClInclude Include="header\Terminal.h" />
     <ClInclude Include="header\WinKeyboard.h" />
   </ItemGroup>
   <ItemGroup>

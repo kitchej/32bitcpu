@@ -2,19 +2,17 @@
 #define BASICIODEVICE_H
 #include <cstdint>
 #include "mmu.h"
-#include <map>
 
 class BasicIODevice {
-	// An abstract base class for implementing memory-mapped IO devices.
+	// A base class for implementing memory-mapped IO devices.
 protected:
-	MMU* mmu;
-	uint32_t addrRangeStart, addrRangeEnd;
+	MMU* mainMmu;
+	uint32_t readyRegAddr;
 
 public:
 	BasicIODevice();
-	BasicIODevice(MMU* mmu, uint32_t addrRangeStart, uint32_t addrRangeEnd);
-	virtual void write(uint32_t value);
-	virtual bool isReady();
+	BasicIODevice(MMU* mmu, uint32_t readyRegAddr);
+	bool isReady();
 };
 
 #endif

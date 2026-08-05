@@ -6,7 +6,10 @@
 
 #include "header/mmu.h"
 #include "header/CPU.h"
+#include "header/Terminal.h"
 
+#define TERM_READY_BIT 0X4000
+#define TERM_DATA_REG 0X4001
 
 
 int main(int argc, char* argv[]) {
@@ -52,14 +55,27 @@ int main(int argc, char* argv[]) {
 		Load modules here
 		*/
 
-		//MMU* mmu = new MMU(bytes);
-		//uint8_t testByte = mmu->readByte(GENERAL_MEMORY_OFFSET + 4);
-		//uint32_t testWord = mmu->readWord(GENERAL_MEMORY_OFFSET + 4);
+		MMU* mmu = new MMU(bytes);
+		uint8_t testByte = mmu->readByte(GENERAL_MEMORY_OFFSET + 4);
+		uint32_t testWord = mmu->readWord(GENERAL_MEMORY_OFFSET + 4);
 
-		//delete mmu;
 
-		CPU* cpu = new CPU(bytes);
-		cpu->mainloop();
+
+		Terminal* term = new Terminal(mmu, TERM_DATA_REG, TERM_READY_BIT);
+		term->start();
+
+		for (char i : "Hello World!") {
+			while (term->isReady()) {}
+			mmu->writeByteIO(TERM_DATA_REG, TERM_READY_BIT, (uint32_t)i, true);
+		}
+
+		term->stop();
+		delete term;
+		delete mmu;
+
+
+		//CPU* cpu = new CPU(bytes);
+		//cpu->mainloop();
 
 		return 0;
 }

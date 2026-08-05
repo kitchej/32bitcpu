@@ -39,5 +39,18 @@ uint32_t MMU::readWord(uint32_t address) {
 			memoryBuffer->at(address + 3) << 24;
 }
 
+void MMU::writeByteIO(uint32_t dataAddress, uint32_t readyRegAddr, uint32_t value, bool readyValue) {
+	std::lock_guard<std::mutex> lock(memoryLock);
+	memoryBuffer->at(dataAddress) = value & 0xFF;
+	memoryBuffer->at(readyRegAddr) = (uint8_t)readyValue;
+}
+
+uint8_t MMU::readByteIO(uint32_t dataAddress, uint32_t readyRegAddr, bool readyValue) {
+	std::lock_guard<std::mutex> lock(memoryLock);
+	memoryBuffer->at(readyRegAddr) = (uint8_t)readyValue;
+	return static_cast<uint8_t>(memoryBuffer->at(dataAddress));
+
+}
+
 
 

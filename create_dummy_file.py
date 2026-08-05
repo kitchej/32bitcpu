@@ -11,7 +11,7 @@ import struct
 from sys import byteorder
 MAX_UINT_32 = 0xFFFFFFFF
 JUMPS_ONLY = False
-FILE_SIZE = 268414976
+FILE_SIZE = 268353536
 INSTRUCT_OFFSET = 0
 DATA_OFFSET = 0
 
