@@ -112,11 +112,13 @@ CPU::CPU(std::vector<uint8_t>* bytes) {
 	initialize_instruction_tables();
 	mmu = new MMU(bytes);
 }
+
 CPU::CPU(MMU* mmu_obj) {
 	initialize_registers();
 	initialize_instruction_tables();
 	mmu = mmu_obj;
 }
+
 CPU::~CPU() {
 	delete mmu;
 }
@@ -149,6 +151,7 @@ void CPU::decode_rtype(uint32_t instr, Instruction& instrInfo) {
 	instrInfo.imm17 = 0;
 	instrInfo.offset26 = 0;
 }
+
 void CPU::decode_itype(uint32_t instr, Instruction& instrInfo) {
 	instrInfo.dest = (instr >> 21) & MASK_5BIT;
 	instrInfo.src = (instr >> 16) & MASK_5BIT;
@@ -157,6 +160,7 @@ void CPU::decode_itype(uint32_t instr, Instruction& instrInfo) {
 	instrInfo.offset26 = 0;
 
 }
+
 void CPU::decode_jtype(uint32_t instr, Instruction& instrInfo) {
 	instrInfo.offset26 = instr & MASK_26BIT;
 	instrInfo.dest = 0;
@@ -201,6 +205,7 @@ void CPU::mainloop() {
 uint32_t CPU::peek_reg(Register address) {
 	return *registerFile[address];
 }
+
 void CPU::poke_reg(Register address, uint32_t value) {
 	*registerFile[address] = value;
 }
@@ -237,11 +242,13 @@ void CPU::ADD(const Instruction& instr){
 	clear_flags();
 	set_flags((Register)instr.dest);
 }
+
 void CPU::AND(const Instruction& instr){
 	*registerFile[(Register)instr.dest] = *registerFile[(Register)instr.src] & *registerFile[(Register)instr.trgt];
 	clear_flags();
 	set_flags((Register)instr.dest);
 }
+
 void CPU::DIV(const Instruction& instr){
 	// All this casting crap is needed to get true signed divsion in cpp
 	int32_t dest = (int32_t)*registerFile[(Register)instr.dest];
@@ -269,18 +276,22 @@ void CPU::NOT(const Instruction& instr){
 	*registerFile[(Register)instr.dest] = ~(*registerFile[(Register)instr.src]);
 	clear_flags();
 }
+
 void CPU::OR(const Instruction& instr){
 	*registerFile[(Register)instr.dest] = (*registerFile[(Register)instr.src]) | (*registerFile[(Register)instr.trgt]);
 	clear_flags();
 }
+
 void CPU::SUB(const Instruction& instr){
 	*registerFile[(Register)instr.dest] = (*registerFile[(Register)instr.src]) - (*registerFile[(Register)instr.trgt]);
 	clear_flags();
 }
+
 void CPU::XOR(const Instruction& instr){
 	*registerFile[(Register)instr.dest] = (*registerFile[(Register)instr.src]) ^ (*registerFile[(Register)instr.trgt]);
 	clear_flags();
 }
+
 void CPU::HALT(const Instruction& instr){
 	clear_flags();
 	HALT_FLAG = true;
@@ -295,6 +306,7 @@ void CPU::ADDI(const Instruction& instr){
 	clear_flags();
 	set_flags((Register)instr.dest);
 }
+
 void CPU::ANDI(const Instruction& instr) {
 	uint32_t imm17 = instr.imm17;
 	sign_extend_imm17(imm17);
@@ -302,34 +314,40 @@ void CPU::ANDI(const Instruction& instr) {
 	clear_flags();
 	set_flags((Register)instr.dest);
 }
+
 void CPU::LB(const Instruction& instr){
 	mar = instr.imm17 + pc;
 	mdr = mmu->readByte(mar);
 	*registerFile[(Register)instr.dest] = mdr;
 	clear_flags();
 }
+
 void CPU::LBI(const Instruction& instr){
 	mar = *registerFile[(Register)instr.src];
 	mdr = mmu->readByte(mar);
 	*registerFile[(Register)instr.dest] = mdr;
 	clear_flags();
 }
+
 void CPU::LBS(const Instruction& instr){
 	*registerFile[(Register)instr.dest] = (*registerFile[(Register)instr.src]) << instr.imm17;
 	clear_flags();
 }
+
 void CPU::LW(const Instruction& instr){
 	mar = instr.imm17 + pc;
 	mdr = mmu->readWord(mar);
 	*registerFile[(Register)instr.dest] = mdr;
 	clear_flags();
 }
+
 void CPU::LWI(const Instruction& instr){
 	mar = *registerFile[(Register)instr.src];
 	mdr = mmu->readWord(mar);
 	*registerFile[(Register)instr.dest] = mdr;
 	clear_flags();
 }
+
 void CPU::ORI(const Instruction& instr){
 	uint32_t imm17 = instr.imm17;
 	sign_extend_imm17(imm17);
@@ -337,6 +355,7 @@ void CPU::ORI(const Instruction& instr){
 	clear_flags();
 	set_flags((Register)instr.dest);
 }
+
 void CPU::RBS(const Instruction& instr){
 	*registerFile[(Register)instr.dest] = (*registerFile[(Register)instr.src]) >> instr.imm17;
 	clear_flags();
@@ -348,6 +367,7 @@ void CPU::SB(const Instruction& instr){
 	mmu->writeByte(mar, mdr);
 	clear_flags(); 
 }
+
 void CPU::SBI(const Instruction& instr){
 	// THESE OPCODE ARGUMENTS ARE CORRECT!
 	// DO NOT CHANGE THEM!
@@ -356,17 +376,20 @@ void CPU::SBI(const Instruction& instr){
 	mmu->writeByte(mar, mdr);
 	clear_flags();
 }
+
 void CPU::SUBI(const Instruction& instr){
 	*registerFile[(Register)instr.dest] = (*registerFile[(Register)instr.src]) - instr.imm17;
 	clear_flags();
 	set_flags((Register)instr.dest);
 }
+
 void CPU::SW(const Instruction& instr){
 	mar = instr.imm17 + pc;
 	mdr = *registerFile[(Register)instr.src];
 	mmu->writeByte(mar, mdr);
 	clear_flags();
 }
+
 void CPU::SWI(const Instruction& instr){
 	// THESE OPCODE ARGUMENTS ARE CORRECT!
 	// DO NOT CHANGE THEM!
@@ -376,6 +399,7 @@ void CPU::SWI(const Instruction& instr){
 	clear_flags();
 	clear_flags();
 }
+
 void CPU::XORI(const Instruction& instr){
 	uint32_t imm17 = instr.imm17;
 	sign_extend_imm17(imm17);
@@ -392,37 +416,44 @@ void CPU::JALA(const Instruction& instr) {
 	pc = *registerFile[(Register)instr.src];
 	clear_flags();
 }
+
 void CPU::BRN(const Instruction& instr) {
 	if (N_FLAG) {
 		pc += (instr.offset26) * 4;
 	}
 	clear_flags();
 }
+
 void CPU::BRP(const Instruction& instr) {
 	if (P_FLAG) {
 		pc += (instr.offset26) * 4;
 	}
 	clear_flags();
 }
+
 void CPU::BRZ(const Instruction& instr) {
 	if (Z_FLAG) {
 		pc += (instr.offset26) * 4;
 	}
 	clear_flags();
 }
+
 void CPU::JAL(const Instruction& instr) {
 	ra = pc;
 	pc += (instr.offset26) * 4;
 	clear_flags();
 }
+
 void CPU::JMP(const Instruction& instr) {
 	pc += (instr.offset26) * 4;
 	clear_flags();
 }
+
 void CPU::RET(const Instruction& instr) {
 	pc = ra;
 	clear_flags();
 }
+
 void CPU::TRAP(const Instruction& instr) {
 	// We'll look at this again when we implment the kernel
 	clear_flags();
@@ -433,24 +464,31 @@ void CPU::TRAP(const Instruction& instr) {
 void CPU::JALA(const Instruction& instr) {
 	clear_flags();
 }
+
 void CPU::BRN(const Instruction& instr) {
 	clear_flags();
 }
+
 void CPU::BRP(const Instruction& instr) {
 	clear_flags();
 }
+
 void CPU::BRZ(const Instruction& instr) {
 	clear_flags();
 }
+
 void CPU::JAL(const Instruction& instr) {
 	clear_flags();
 }
+
 void CPU::JMP(const Instruction& instr) {
 	clear_flags();
 }
+
 void CPU::RET(const Instruction& instr) {
 	clear_flags();
 }
+
 void CPU::TRAP(const Instruction& instr) {
 	clear_flags();
 }

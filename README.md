@@ -1,14 +1,15 @@
 # LC-32 - Little Computer 32
 ## Architecture Overview
 
-| |
-| ----------- | ----------- | ----------- | ----------- |
-|**Word Size**|32 Bits||
-|**Endianess**|Little||
-|**Addressing modes**|PC relative and register indirect||
+|
+| ----------- | -----------
+|**Word Size**|32 Bits|
+|**Endianess**|Little|
+|**Addressing modes**|PC relative and register indirect|
+
 ### Programmable registers
 | Name | Value | Purpose | Persists After Subroutine Call
-| ----------- | ----------- | ----------- | ----------- |
+| ----------- | ----------- | ----------- | ----------- 
 |$R0-$R7|0-7|General Purpose | No
 |$RA|8| Subroutine Return Address | No
 |$A0-$A2|9-11|Subroutine Argument Registers | Yes
@@ -24,14 +25,7 @@
 |N| Negative Flag
 |IR| Instruction Register
 |MAR| Memory Address Register
-|MDR| Memory Data Register
-### Endianness
-Both data and instructions are stored in little-endian format
-
-### Addressing
-
-Most J-type instructions and most Load/Store instructions use PC relative addressing
-Exceptioons to this are LBI, SBI, LWI, SWI, and JALA which use absolute addressing via a base register
+|MDR| Memory Data Registerr
 
 
 #### Direct Addressing

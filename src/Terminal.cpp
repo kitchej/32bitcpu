@@ -6,7 +6,7 @@ void Terminal::mainloop() {
 	while (!shouldStop) {
 		while (!isReady() && !shouldStop) {}
 		if (!shouldStop) {
-			std::cout << (char)mainMmu->readByteIO(charRegAddr, readyRegAddr, false);
+			std::cout << (char)mainMmu->readByteIO(charRegAddr, false);
 		}
 	}
 }
