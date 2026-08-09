@@ -53,7 +53,7 @@ int main(int argc, char* argv[]) {
 		*/
 
 		MemoryController* memoryController = new MemoryController(bytes);
-		memoryController->writeWord(HARDWARE_INTERRUPT_TABLE - 4, 1);
+		memoryController->writeWord(HARDWARE_INTERRUPT_TABLE - 16, 1);
 		memoryController->writeWord(1, 0x84000000);
 		CPU* cpu = new CPU(memoryController);
 		cpu->mainloop();

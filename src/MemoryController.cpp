@@ -12,7 +12,10 @@ MemoryController::MemoryController(std::vector<uint8_t> *buffer) {
 }
 
 MemoryController::~MemoryController() {
-	delete addressSpace;
+	if (addressSpace != nullptr) {
+		delete addressSpace;
+	}
+	
 	delete IODeviceMap;
 }
 

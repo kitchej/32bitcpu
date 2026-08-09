@@ -20,16 +20,16 @@ LC-32 is RISC style architecture based on the LC-3 and MIPS architectures
 |$V0-$V1|12-13|Subroutine Output Registers | No
 |$SP|14| Stack Pointer | Yes
 |$SF|15| Stack Frame Pointer | Yes
+|$R8-$R15|16-23| General Purpose | No
 ### Internal Registers
-| Name | Purpose 
-| ----------- | ----------- |
-|PC| Program Counter
-|Z| Zero Flag
-|P| Positive Flag
-|N| Negative Flag
-|IR| Instruction Register
-|MAR| Memory Address Register
-|MDR| Memory Data Register
+| Name | Value | Purpose 
+| -----------|----------- | ----------- |
+|$IRA| 26| Interrupt Return Addresss
+|$PC| 27 | Program Counter
+|$FLAGS| 28 | BIT 31: Zero, BIT 30: Negative, BIT 29: Postive, BIT 28: D_ZERO, BIT 27: SERVICING_INTERRUPT 
+|$IR| 29 |Instruction Register
+|$MAR| 30 |Memory Address Register
+|$MDR| 31 |Memory Data Register
 
 
 #### Direct Addressing

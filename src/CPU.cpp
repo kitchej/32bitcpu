@@ -80,11 +80,11 @@ void CPU::initialize_instruction_tables() {
 
 void CPU::initialize_registers() {
 	N_FLAG = false; P_FLAG = false; Z_FLAG = false; D_ZERO = false; HALT_FLAG = false; SERVICING_INTERRUPT = false;
-	 r0 = 0;  r1 = 0;  r2 = 0;  r3 = 0;  r4 = 0;  r5 = 0;  r6 = 0;  r7 = 0;
-	 a0 = 0;  a1 = 0;  a2 = 0;
-	 v0 = 0;  v1 = 0; ra = 0;
-	 sp = 0;  sf = 0;
-	 pc = GENERAL_MEMORY_OFFSET;  ir = 0;  mar = 0;  mdr = 0;
+	r0 = 0;  r1 = 0;  r2 = 0;  r3 = 0;  r4 = 0;  r5 = 0;  r6 = 0;  r7 = 0, r8 = 0, r9 = 0, r10 = 0, r11 = 0, r12 = 0, r13 = 0, r14 = 0, r15 = 0;
+	a0 = 0;  a1 = 0;  a2 = 0;
+	v0 = 0;  v1 = 0; ra = 0;
+	sp = 0;  sf = 0;
+	pc = GENERAL_MEMORY_OFFSET;  ir = 0;  mar = 0;  mdr = 0, ira = 0;
 
 	 registerFile[Register::R0] = &r0;
 	 registerFile[Register::R1] = &r1;
@@ -102,6 +102,14 @@ void CPU::initialize_registers() {
 	 registerFile[Register::V1] = &v1;
 	 registerFile[Register::SP] = &sp;
 	 registerFile[Register::SF] = &sf;
+	 registerFile[Register::R8] = &r8;
+	 registerFile[Register::R9] = &r9;
+	 registerFile[Register::R10] = &r10;
+	 registerFile[Register::R11] = &r11;
+	 registerFile[Register::R12] = &r12;
+	 registerFile[Register::R13] = &r13;
+	 registerFile[Register::R14] = &r14;
+	 registerFile[Register::R15] = &r15;
 }
 
 CPU::CPU() {
@@ -202,25 +210,25 @@ void CPU::mainloop() {
 }
 
 void CPU::service_interrupts() {
+	std::lock_guard<std::mutex> lock(interruptLock);
 	if (SERVICING_INTERRUPT) {
 		return;
 	}
 	else if (!interruptq.empty()) {
-		std::lock_guard<std::mutex> lock(interruptLock);
 		uint32_t interVec = interruptq.back();
 		uint32_t interJmp = 0;
 		if (interVec <= 0xFF) {
-			interJmp = memoryController->readWord(HARDWARE_INTERRUPT_TABLE - interVec);
+			interJmp = memoryController->readWord(HARDWARE_INTERRUPT_TABLE - (interVec * 4));
 		}
 		else {
-			interJmp = memoryController->readWord(SOFTWARE_INTERRUPT_TABLE - interVec);
+			interJmp = memoryController->readWord(SOFTWARE_INTERRUPT_TABLE - (interVec * 4));
 		}
 		interruptq.pop_back();
 		if (interJmp <= 0) { 
 			// Invalid interrupt vector, do nothing
 		}
 		else {
-			ra = pc;
+			ira = pc + 4;
 			pc = interJmp - 4; // to account for hardcoded pc + 4
 			SERVICING_INTERRUPT = true;
 		}
@@ -487,7 +495,7 @@ void CPU::INTER(const Instruction& instr) {
 }
 
 void CPU::RETI(const Instruction& instr) {
-	pc = ra;
+	pc = ira - 4;
 	SERVICING_INTERRUPT = false;
 	clear_flags();
 }

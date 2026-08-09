@@ -64,7 +64,15 @@ enum class Register : uint8_t {
 	V0,
 	V1,
 	SP,
-	SF
+	SF,
+	R8,
+	R9,
+	R10,
+	R11,
+	R12,
+	R13,
+	R14,
+	R15
 
 };
 
@@ -87,14 +95,14 @@ private:
 	static constexpr uint8_t MASK_5BIT = 0x1F;
 	static constexpr uint8_t MASK_6BIT = 0x3F;
 	// General Purpose Regesters
-	uint32_t r0, r1, r2, r3, r4, r5, r6, r7;
+	uint32_t r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, r13, r14, r15;
 	// Special Purpose Regesters
 	uint32_t a0, a1, a2;
 	uint32_t v0, v1;
 	uint32_t sp, sf;
 	uint32_t ra;
 	// Internal Registers
-	uint32_t pc, ir, mar, mdr;
+	uint32_t pc, ir, mar, mdr, ira;
 	// Flags
 	bool N_FLAG;
 	bool P_FLAG;
