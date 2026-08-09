@@ -1,11 +1,10 @@
 #ifndef TERMINAL_H
 #define TERMINAL_H
 #include "BasicIODevice.h"
-#include "mmu.h"
 #include <thread>
 #include <atomic>
 
-class Terminal : public BasicIODevice {
+class Terminal : BasicIODevice {
 	uint32_t charRegAddr;
 	std::thread listenerThread;
 	std::atomic<bool> shouldStop{false};
@@ -13,11 +12,7 @@ class Terminal : public BasicIODevice {
 	void mainloop();
 
 public:
-	Terminal();
-	Terminal(MMU *mainMmu, uint32_t charRegAddr, uint32_t readyRegAddr);
-	void start();
-	void stop();
-	~Terminal();
+
 
 
 };

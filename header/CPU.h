@@ -3,9 +3,11 @@
 #include <cstdint>
 #include <string>
 #include <map>
-#include "mmu.h"
+#include "memoryController.h"
 
 #define DISABLE_JUMPS false
+#define HARDWARE_INTERRUPT_TABLE 0X3FFF
+#define SOFTWARE_INTERRUPT_TABLE  0xFFFFFFF
 
 class CPU;
 
@@ -39,10 +41,11 @@ enum class Opcode : uint8_t {
 	SUBI,
 	SW,
 	SWI,
-	TRAP,
+	INTER,
 	XOR,
 	XORI,
-	HALT
+	HALT,
+	RETI
 };
 
 enum class Register : uint8_t {
@@ -98,14 +101,19 @@ private:
 	bool Z_FLAG;
 	bool D_ZERO;
 	bool HALT_FLAG;
+	bool SERVICING_INTERRUPT;
 
 	// Classes
-	MMU* mmu;
+	MemoryController* memoryController;
 
 	// Data Structures
 	std::map<Opcode, std::vector<std::string>> instructionFormats;
 	std::vector<OP_FPTR> opTable;
 	std::map<Register, uint32_t*> registerFile;
+	std::vector<uint32_t> interruptq;
+
+	// Syncronization 
+	std::mutex interruptLock;
 
 	// CPU Execution Methods
 	void set_flags(Register address);
@@ -120,20 +128,22 @@ private:
 	// Initialzation methods
 	void initialize_registers();
 	void initialize_instruction_tables();
+	// Interrupt control
+	void service_interrupts();
+	
 
 public:
 	
 
 	CPU();
-	CPU(std::vector<uint8_t>* bytes);
-	CPU(MMU* mmu_obj);
+	CPU(MemoryController* memoryController_obj);
 	~CPU();
 
 	void mainloop();
 	void reset();
 	uint32_t peek_reg(Register address);
 	void poke_reg(Register address, uint32_t value);
-
+	void interrupt(uint32_t interVec);
 
 	// R-type Instructions
 	void NOP(const Instruction& instr);
@@ -172,7 +182,8 @@ public:
 	void JAL(const Instruction& instr);
 	void JMP(const Instruction& instr);
 	void RET(const Instruction& instr);
-	void TRAP(const Instruction& instr);
+	void INTER(const Instruction& instr);
+	void RETI(const Instruction& instr);
 
 
 };

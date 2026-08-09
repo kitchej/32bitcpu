@@ -1,5 +1,6 @@
 #include <cstdint>
 #include <iostream>
+#include <mutex>
 #include "../header/CPU.h"
 
 
@@ -33,10 +34,11 @@ void CPU::initialize_instruction_tables() {
 	instructionFormats[Opcode::SUBI] = {"I-type", "dest", "src1", "imm17"};
 	instructionFormats[Opcode::SW] = {"I-type", "dest", "src1", "imm17"};
 	instructionFormats[Opcode::SWI] = {"I-type", "dest", "imm17"};
-	instructionFormats[Opcode::TRAP] = {"J-type"};
+	instructionFormats[Opcode::INTER] = {"J-type"};
 	instructionFormats[Opcode::XOR] = {"R-type", "dest", "src1", "src2"};
 	instructionFormats[Opcode::XORI] = {"I-type", "dest", "src1", "imm17"};
 	instructionFormats[Opcode::HALT] = { "R-type"};
+	instructionFormats[Opcode::RETI] = { "J-type"};
 	opTable = std::vector<OP_FPTR>{
 		&CPU::NOP,
 		&CPU::ADD,
@@ -67,21 +69,22 @@ void CPU::initialize_instruction_tables() {
 		&CPU::SUBI,
 		&CPU::SW,
 		&CPU::SWI,
-		&CPU::TRAP,
+		&CPU::INTER,
 		&CPU::XOR,
 		&CPU::XORI,
 		&CPU::HALT,
+		&CPU::RETI
 
 	};
 }
 
 void CPU::initialize_registers() {
-	 N_FLAG = false; P_FLAG = false; Z_FLAG = false; D_ZERO = false; HALT_FLAG = false;
+	N_FLAG = false; P_FLAG = false; Z_FLAG = false; D_ZERO = false; HALT_FLAG = false; SERVICING_INTERRUPT = false;
 	 r0 = 0;  r1 = 0;  r2 = 0;  r3 = 0;  r4 = 0;  r5 = 0;  r6 = 0;  r7 = 0;
 	 a0 = 0;  a1 = 0;  a2 = 0;
 	 v0 = 0;  v1 = 0; ra = 0;
 	 sp = 0;  sf = 0;
-	 pc = 0x00005000;  ir = 0;  mar = 0;  mdr = 0;
+	 pc = GENERAL_MEMORY_OFFSET;  ir = 0;  mar = 0;  mdr = 0;
 
 	 registerFile[Register::R0] = &r0;
 	 registerFile[Register::R1] = &r1;
@@ -104,23 +107,17 @@ void CPU::initialize_registers() {
 CPU::CPU() {
 	initialize_registers();
 	initialize_instruction_tables();
-	mmu = new MMU();
+	memoryController = new MemoryController();
 }
 
-CPU::CPU(std::vector<uint8_t>* bytes) {
+CPU::CPU(MemoryController* memoryController_obj) {
 	initialize_registers();
 	initialize_instruction_tables();
-	mmu = new MMU(bytes);
-}
-
-CPU::CPU(MMU* mmu_obj) {
-	initialize_registers();
-	initialize_instruction_tables();
-	mmu = mmu_obj;
+	memoryController = memoryController_obj;
 }
 
 CPU::~CPU() {
-	delete mmu;
+	delete memoryController;
 }
 
 Instruction CPU::decode_instruction() {
@@ -170,7 +167,7 @@ void CPU::decode_jtype(uint32_t instr, Instruction& instrInfo) {
 }
 
 void CPU::fetch_instruction() {
-	ir = mmu->readWord(pc);
+	ir = memoryController->readWord(pc);
 }
 
 void CPU::execute_instruction(const Instruction& instr) {
@@ -189,16 +186,47 @@ void CPU::reset() {
 	initialize_registers();
 }
 
+void CPU::interrupt(uint32_t interVec) {
+	std::lock_guard<std::mutex> lock(interruptLock);
+	interruptq.insert(interruptq.begin(), interVec);
+}
+
 void CPU::mainloop() {
-	/*DEBUG CODE*/
-	//poke_reg(Register::R2, 1);
-	//poke_reg(Register::R3, 2);
-	/*END DEBUG CODE*/
 	while (!HALT_FLAG) {
 		fetch_instruction();
 		Instruction curr_instr = decode_instruction();
 		execute_instruction(curr_instr);
+		service_interrupts();
 		pc += 4;
+	}
+}
+
+void CPU::service_interrupts() {
+	if (SERVICING_INTERRUPT) {
+		return;
+	}
+	else if (!interruptq.empty()) {
+		std::lock_guard<std::mutex> lock(interruptLock);
+		uint32_t interVec = interruptq.back();
+		uint32_t interJmp = 0;
+		if (interVec <= 0xFF) {
+			interJmp = memoryController->readWord(HARDWARE_INTERRUPT_TABLE - interVec);
+		}
+		else {
+			interJmp = memoryController->readWord(SOFTWARE_INTERRUPT_TABLE - interVec);
+		}
+		interruptq.pop_back();
+		if (interJmp <= 0) { 
+			// Invalid interrupt vector, do nothing
+		}
+		else {
+			ra = pc;
+			pc = interJmp - 4; // to account for hardcoded pc + 4
+			SERVICING_INTERRUPT = true;
+		}
+	}
+	else {
+		SERVICING_INTERRUPT = false;
 	}
 }
 
@@ -317,14 +345,14 @@ void CPU::ANDI(const Instruction& instr) {
 
 void CPU::LB(const Instruction& instr){
 	mar = instr.imm17 + pc;
-	mdr = mmu->readByte(mar);
+	mdr = memoryController->readByte(mar);
 	*registerFile[(Register)instr.dest] = mdr;
 	clear_flags();
 }
 
 void CPU::LBI(const Instruction& instr){
 	mar = *registerFile[(Register)instr.src];
-	mdr = mmu->readByte(mar);
+	mdr = memoryController->readByte(mar);
 	*registerFile[(Register)instr.dest] = mdr;
 	clear_flags();
 }
@@ -336,14 +364,14 @@ void CPU::LBS(const Instruction& instr){
 
 void CPU::LW(const Instruction& instr){
 	mar = instr.imm17 + pc;
-	mdr = mmu->readWord(mar);
+	mdr = memoryController->readWord(mar);
 	*registerFile[(Register)instr.dest] = mdr;
 	clear_flags();
 }
 
 void CPU::LWI(const Instruction& instr){
 	mar = *registerFile[(Register)instr.src];
-	mdr = mmu->readWord(mar);
+	mdr = memoryController->readWord(mar);
 	*registerFile[(Register)instr.dest] = mdr;
 	clear_flags();
 }
@@ -364,7 +392,7 @@ void CPU::RBS(const Instruction& instr){
 void CPU::SB(const Instruction& instr){
 	mar = instr.imm17 + pc;
 	mdr = *registerFile[(Register)instr.src];
-	mmu->writeByte(mar, mdr);
+	memoryController->writeByte(mar, mdr);
 	clear_flags(); 
 }
 
@@ -373,7 +401,7 @@ void CPU::SBI(const Instruction& instr){
 	// DO NOT CHANGE THEM!
 	mar = *registerFile[(Register)instr.src]; // < CORRECT!
 	mdr = *registerFile[(Register)instr.dest]; // < CORRECT!
-	mmu->writeByte(mar, mdr);
+	memoryController->writeByte(mar, mdr);
 	clear_flags();
 }
 
@@ -386,7 +414,7 @@ void CPU::SUBI(const Instruction& instr){
 void CPU::SW(const Instruction& instr){
 	mar = instr.imm17 + pc;
 	mdr = *registerFile[(Register)instr.src];
-	mmu->writeByte(mar, mdr);
+	memoryController->writeByte(mar, mdr);
 	clear_flags();
 }
 
@@ -395,8 +423,7 @@ void CPU::SWI(const Instruction& instr){
 	// DO NOT CHANGE THEM!
 	mar = *registerFile[(Register)instr.src]; // < CORRECT!
 	mdr = *registerFile[(Register)instr.dest]; // < CORRECT!
-	mmu->writeWord(mar, mdr);
-	clear_flags();
+	memoryController->writeWord(mar, mdr);
 	clear_flags();
 }
 
@@ -454,8 +481,14 @@ void CPU::RET(const Instruction& instr) {
 	clear_flags();
 }
 
-void CPU::TRAP(const Instruction& instr) {
-	// We'll look at this again when we implment the kernel
+void CPU::INTER(const Instruction& instr) {
+	clear_flags();
+	interrupt(instr.offset26);
+}
+
+void CPU::RETI(const Instruction& instr) {
+	pc = ra;
+	SERVICING_INTERRUPT = false;
 	clear_flags();
 }
 
@@ -489,7 +522,11 @@ void CPU::RET(const Instruction& instr) {
 	clear_flags();
 }
 
-void CPU::TRAP(const Instruction& instr) {
+void CPU::INTER(const Instruction& instr) {
+	clear_flags();
+}
+
+void CPU::RETI(const Instruction& instr) {
 	clear_flags();
 }
 

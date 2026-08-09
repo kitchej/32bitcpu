@@ -5,6 +5,11 @@ VisualStudioVersion = 18.8.12023.21
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "32bitcpu", "32bitcpu.vcxproj", "{3BA1D5F1-1211-4B39-65D4-FC1CBC981D53}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{82F35816-6732-451A-A7EB-C2145EF6E9A4}"
+	ProjectSection(SolutionItems) = preProject
+		L32Diagram.drawio.png = L32Diagram.drawio.png
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64

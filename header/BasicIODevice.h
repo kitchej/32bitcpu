@@ -1,18 +1,14 @@
 #ifndef BASICIODEVICE_H
 #define BASICIODEVICE_H
 #include <cstdint>
-#include "mmu.h"
+#include "memoryController.h"
 
 class BasicIODevice {
 	// A base class for implementing memory-mapped IO devices.
-protected:
-	MMU* mainMmu;
-	uint32_t readyRegAddr;
-
 public:
 	BasicIODevice();
-	BasicIODevice(MMU* mmu, uint32_t readyRegAddr);
-	bool isReady();
+	virtual void signal(); // Called by the MemoryController to notify that IO device has been written/read to
+
 };
 
 #endif

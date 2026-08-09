@@ -1,5 +1,9 @@
 # LC-32 - Little Computer 32
+Written by Joshua Kitchen
+
 ## Architecture Overview
+
+LC-32 is RISC style architecture based on the LC-3 and MIPS architectures
 
 |
 | ----------- | -----------
@@ -25,7 +29,7 @@
 |N| Negative Flag
 |IR| Instruction Register
 |MAR| Memory Address Register
-|MDR| Memory Data Registerr
+|MDR| Memory Data Register
 
 
 #### Direct Addressing
@@ -37,6 +41,11 @@
 |Reserved for I/O|0x00004000-0x00013FFF | 65,536 bytes (64 KB)
 |General Purpose|0x00014000-0x0FFFFFFF | 268,353,536 bytes (256 MB)
 |TOTAL|0x00000000 - 0x0FFFFFFF|268,435,456 bytes (256 MB)|
+
+## Interrupts
+Both hardware and software can send interrupts. Interrupt vectors are 32-bit. Vectors 0x00 - 0xFF are reserved for hardware interrupts with the remaining vectors avalible for software interrupts.
+The hardware interrupt table starts at the top of kernel ROM at addresss 0x3FFF and grows downward. The software interrupt table starts at the top of General Purpose memory at 0xFFFFFFF and grows downward.
+***All interrupt handlers must end with RETI to ensure other interrupts can be serviced!***
 ## Instruction Formats
 
 ### R-TYPE INSTRUCTIONS
@@ -90,7 +99,8 @@
 |I|Subtract Immediate|SUBI|0x1A|DEST=SRC-imm17|DEST|SRC|imm17
 |I|Store Word|SW|0x1B|MEM[PC+4+(OFFSET*4)]=SRC|SRC|OFFSET18|
 |I|Store Word Indirect|SWI|0x1C|MEM[BASE REG]=SRC|SRC|BASE REG|
-|J|Trap|TRAP|0x1D|PC=0+(OFFSET*4)|OFFSET26||
+|J|Interrupt|INTER|0x1D|PC=*(0x0FFFFFFF - OFFSET26)|OFFSET26||
 |R|Exclusive Or|XOR|0x1E|DEST=SRC^TRGT|DEST|SRC|TRGT
 |I|Exclusive Or Immediate|XORI|0x1F|DEST=SRC^imm17|DEST|SRC|
-|R|Halt|HALT|0x20|Stop instruction execution||||
+|R|Halt|HALT|0x20|Stop instruction execution||||+96
+|J|Return from Interrupt|RETI|0x20|PC=RA; SERVICING_INTERRUPTS=0||||
