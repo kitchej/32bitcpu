@@ -1,18 +1,23 @@
 #ifndef TERMINAL_H
 #define TERMINAL_H
-#include "BasicIODevice.h"
+#include "memoryController.h"
+#include "IODevice.h"
 #include <thread>
-#include <atomic>
+#include <mutex>
 
-class Terminal : BasicIODevice {
+class Terminal: IODevice {
+	MemoryController* memoryController;
+	uint32_t readyRegAddr;
 	uint32_t charRegAddr;
-	std::thread listenerThread;
-	std::atomic<bool> shouldStop{false};
-
+	bool isRunning;
+	
 	void mainloop();
-
 public:
-
+	Terminal();
+	Terminal(MemoryController* memoryController, uint32_t charRegAddr, uint32_t readyRegAddr);
+	void start();
+	void stop();
+	void signal() override;
 
 
 };

@@ -8,6 +8,9 @@
 #include "header/CPU.h"
 #include "header/Terminal.h"
 
+#define TERM_CHAR_REG 0x4000
+#define TERM_READY_REG 0x4001
+
 
 int main(int argc, char* argv[]) {
 		std::cout << "LC-32 Emulator written by Joshua Kitchen" << std::endl;

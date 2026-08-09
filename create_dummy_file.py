@@ -122,8 +122,7 @@ def main():
 		]
 	else:
 		instructions = [
-			encode_jtype(OPCODES['INTER'], offset26=4),
-			encode_rtype(OPCODES['ADD'], dest=1, src=1, trgt=2),
+			encode_j
 		]
 
 	print(f"Writing {len(instructions)} instructions to buffer.")

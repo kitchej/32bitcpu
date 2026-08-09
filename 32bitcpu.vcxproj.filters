@@ -21,9 +21,6 @@
     <ClCompile Include="src\CPU.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\BasicIODevice.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\WinKeyboard.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -34,6 +31,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\LC32.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="IODevice.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -48,9 +48,6 @@
     <ClInclude Include="header\CPU.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="header\BasicIODevice.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="header\WinKeyboard.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -61,6 +58,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="header\LC32.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="header\IODevice.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

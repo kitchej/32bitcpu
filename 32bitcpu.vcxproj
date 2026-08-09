@@ -131,8 +131,8 @@
     <None Include="tests\32bitcpu.Tests.vcxproj.filters" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="IODevice.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="src\BasicIODevice.cpp" />
     <ClCompile Include="src\CPU.cpp" />
     <ClCompile Include="src\MemoryController.cpp" />
     <ClCompile Include="src\LC32.cpp" />
@@ -140,8 +140,8 @@
     <ClCompile Include="src\WinKeyboard.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="header\BasicIODevice.h" />
     <ClInclude Include="header\CPU.h" />
+    <ClInclude Include="header\IODevice.h" />
     <ClInclude Include="header\MemoryController.h" />
     <ClInclude Include="header\LC32.h" />
     <ClInclude Include="header\Terminal.h" />
