@@ -1,5 +1,5 @@
 #include "header/IODevice.h"
-#include <thread>
+#include "header/memoryController.h"
 
 IODevice::IODevice() {
 	readyRegAddr = 0;
@@ -12,3 +12,5 @@ IODevice::IODevice(MemoryController* memoryController, uint32_t readyRegAddr) {
 	this->ready = false;
 	this->memoryController = memoryController;
 }
+
+void IODevice::signal() {}

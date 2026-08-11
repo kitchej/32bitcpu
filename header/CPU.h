@@ -5,7 +5,7 @@
 #include <map>
 #include "memoryController.h"
 
-#define DISABLE_JUMPS false
+#define DISABLE_JUMPS true
 #define HARDWARE_INTERRUPT_TABLE 0X3FFF
 #define SOFTWARE_INTERRUPT_TABLE  0xFFFFFFF
 
@@ -76,6 +76,15 @@ enum class Register : uint8_t {
 
 };
 
+enum Flag : uint32_t {
+	ZERO = 31,
+	NEG = 30,
+	POS = 29,
+	D_ZERO = 28,
+	SERVICING_INTERRUPT = 27,
+	HALT = 26
+};
+
 typedef struct Instruction {
 	Opcode opcode;
 	uint8_t dest;
@@ -94,6 +103,7 @@ private:
 	static constexpr uint32_t MASK_26BIT = 0x3FFFFFF;
 	static constexpr uint8_t MASK_5BIT = 0x1F;
 	static constexpr uint8_t MASK_6BIT = 0x3F;
+
 	// General Purpose Regesters
 	uint32_t r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, r13, r14, r15;
 	// Special Purpose Regesters
@@ -104,6 +114,7 @@ private:
 	// Internal Registers
 	uint32_t pc, ir, mar, mdr, ira;
 	// Flags
+	uint32_t flags;
 	bool N_FLAG;
 	bool P_FLAG;
 	bool Z_FLAG;
@@ -124,7 +135,8 @@ private:
 	std::mutex interruptLock;
 
 	// CPU Execution Methods
-	void set_flags(Register address);
+	void set_flag(Flag flag, bool value);
+	void set_flags_alu(uint32_t regDestVal);
 	void clear_flags();
 	void fetch_instruction();
 	Instruction decode_instruction();
@@ -152,6 +164,7 @@ public:
 	uint32_t peek_reg(Register address);
 	void poke_reg(Register address, uint32_t value);
 	void interrupt(uint32_t interVec);
+	bool get_flag(Flag flag);
 
 	// R-type Instructions
 	void NOP(const Instruction& instr);

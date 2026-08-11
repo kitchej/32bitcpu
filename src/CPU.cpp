@@ -79,7 +79,7 @@ void CPU::initialize_instruction_tables() {
 }
 
 void CPU::initialize_registers() {
-	N_FLAG = false; P_FLAG = false; Z_FLAG = false; D_ZERO = false; HALT_FLAG = false; SERVICING_INTERRUPT = false;
+	flags = 0;
 	r0 = 0;  r1 = 0;  r2 = 0;  r3 = 0;  r4 = 0;  r5 = 0;  r6 = 0;  r7 = 0, r8 = 0, r9 = 0, r10 = 0, r11 = 0, r12 = 0, r13 = 0, r14 = 0, r15 = 0;
 	a0 = 0;  a1 = 0;  a2 = 0;
 	v0 = 0;  v1 = 0; ra = 0;
@@ -200,7 +200,7 @@ void CPU::interrupt(uint32_t interVec) {
 }
 
 void CPU::mainloop() {
-	while (!HALT_FLAG) {
+	while (!get_flag(Flag::HALT)) {
 		fetch_instruction();
 		Instruction curr_instr = decode_instruction();
 		execute_instruction(curr_instr);
@@ -211,7 +211,7 @@ void CPU::mainloop() {
 
 void CPU::service_interrupts() {
 	std::lock_guard<std::mutex> lock(interruptLock);
-	if (SERVICING_INTERRUPT) {
+	if (get_flag(Flag::SERVICING_INTERRUPT)) {
 		return;
 	}
 	else if (!interruptq.empty()) {
@@ -230,11 +230,11 @@ void CPU::service_interrupts() {
 		else {
 			ira = pc + 4;
 			pc = interJmp - 4; // to account for hardcoded pc + 4
-			SERVICING_INTERRUPT = true;
+			set_flag(Flag::SERVICING_INTERRUPT, true);
 		}
 	}
 	else {
-		SERVICING_INTERRUPT = false;
+		set_flag(Flag::SERVICING_INTERRUPT, false);
 	}
 }
 
@@ -247,42 +247,42 @@ void CPU::poke_reg(Register address, uint32_t value) {
 }
 
 void CPU::clear_flags() {
-	N_FLAG = false;
-	P_FLAG = false;
-	Z_FLAG = false;
-	D_ZERO = false;
+	flags = 0;
 }
 
-void CPU::set_flags(Register address) {
-	clear_flags();
-	uint32_t rvalue = *registerFile[address];
-	if (rvalue == 0) {
-		Z_FLAG = true;
-		return;
-	}
+void CPU::set_flag(Flag flag, bool value) {
+	flags = (flags & ~(1u << flag)) | (static_cast<uint32_t>(value) << flag);
+}
 
-	uint32_t sign = rvalue & 0x1;
-	if (sign == 1) {
-		N_FLAG = true;
+void CPU::set_flags_alu(uint32_t regDestVal) {
+	clear_flags();
+	int32_t val = static_cast<int32_t>(regDestVal);
+	if (val == 0) {
+		set_flag(Flag::ZERO, 1);
+	}
+	else if (val < 0) {
+		set_flag(Flag::NEG, 1);
 	}
 	else {
-		P_FLAG = true;
+		// Postive
+		set_flag(Flag::POS, 1);
 	}
-	
+}
+
+bool CPU::get_flag(Flag flag) {
+	return flags & (1 << flag);
 }
 
 // R-type Instructions (Except JALA)
 void CPU::NOP(const Instruction& instr) { clear_flags(); }
 void CPU::ADD(const Instruction& instr){
 	*registerFile[(Register)instr.dest] = (*registerFile[(Register)instr.src]) + *registerFile[(Register)instr.trgt];
-	clear_flags();
-	set_flags((Register)instr.dest);
+	set_flags_alu(*registerFile[(Register)instr.dest]);
 }
 
 void CPU::AND(const Instruction& instr){
 	*registerFile[(Register)instr.dest] = *registerFile[(Register)instr.src] & *registerFile[(Register)instr.trgt];
-	clear_flags();
-	set_flags((Register)instr.dest);
+	set_flags_alu(*registerFile[(Register)instr.dest]);
 }
 
 void CPU::DIV(const Instruction& instr){
@@ -291,12 +291,11 @@ void CPU::DIV(const Instruction& instr){
 	int32_t src = (int32_t)*registerFile[(Register)instr.src];
 	int32_t trgt = (int32_t)*registerFile[(Register)instr.trgt];
 	if (trgt == 0) {
-		D_ZERO = true;
+		set_flag(Flag::D_ZERO, 1);
 		return;
 	}
 	*registerFile[(Register)instr.dest] = (uint32_t)(src / trgt);
-	clear_flags();
-	set_flags((Register)instr.dest);
+	set_flags_alu(*registerFile[(Register)instr.dest]);
 }
 
 void CPU::MULT(const Instruction& instr){
@@ -305,8 +304,7 @@ void CPU::MULT(const Instruction& instr){
 	int32_t src = (int32_t)*registerFile[(Register)instr.src];
 	int32_t trgt = (int32_t)*registerFile[(Register)instr.trgt];
 	*registerFile[(Register)instr.dest] = (uint32_t)(src * trgt);
-	clear_flags();
-	set_flags((Register)instr.dest);
+	set_flags_alu(*registerFile[(Register)instr.dest]);
 }
 void CPU::NOT(const Instruction& instr){
 	*registerFile[(Register)instr.dest] = ~(*registerFile[(Register)instr.src]);
@@ -315,22 +313,22 @@ void CPU::NOT(const Instruction& instr){
 
 void CPU::OR(const Instruction& instr){
 	*registerFile[(Register)instr.dest] = (*registerFile[(Register)instr.src]) | (*registerFile[(Register)instr.trgt]);
-	clear_flags();
+	set_flags_alu(*registerFile[(Register)instr.dest]);
 }
 
 void CPU::SUB(const Instruction& instr){
 	*registerFile[(Register)instr.dest] = (*registerFile[(Register)instr.src]) - (*registerFile[(Register)instr.trgt]);
-	clear_flags();
+	set_flags_alu(*registerFile[(Register)instr.dest]);
 }
 
 void CPU::XOR(const Instruction& instr){
 	*registerFile[(Register)instr.dest] = (*registerFile[(Register)instr.src]) ^ (*registerFile[(Register)instr.trgt]);
-	clear_flags();
+	set_flags_alu(*registerFile[(Register)instr.dest]);
 }
 
 void CPU::HALT(const Instruction& instr){
 	clear_flags();
-	HALT_FLAG = true;
+	set_flag(Flag::HALT, true);
 }
 
 
@@ -339,16 +337,14 @@ void CPU::ADDI(const Instruction& instr){
 	uint32_t imm17 = instr.imm17;
 	sign_extend_imm17(imm17);
 	*registerFile[(Register)instr.dest] = (*registerFile[(Register)instr.src]) + imm17;
-	clear_flags();
-	set_flags((Register)instr.dest);
+	set_flags_alu(*registerFile[(Register)instr.dest]);
 }
 
 void CPU::ANDI(const Instruction& instr) {
 	uint32_t imm17 = instr.imm17;
 	sign_extend_imm17(imm17);
 	*registerFile[(Register)instr.dest] = (*registerFile[(Register)instr.src]) & imm17;
-	clear_flags();
-	set_flags((Register)instr.dest);
+	set_flags_alu(*registerFile[(Register)instr.dest]);
 }
 
 void CPU::LB(const Instruction& instr){
@@ -388,8 +384,7 @@ void CPU::ORI(const Instruction& instr){
 	uint32_t imm17 = instr.imm17;
 	sign_extend_imm17(imm17);
 	*registerFile[(Register)instr.dest] = (*registerFile[(Register)instr.src]) | imm17;
-	clear_flags();
-	set_flags((Register)instr.dest);
+	set_flags_alu(*registerFile[(Register)instr.dest]);
 }
 
 void CPU::RBS(const Instruction& instr){
@@ -415,8 +410,7 @@ void CPU::SBI(const Instruction& instr){
 
 void CPU::SUBI(const Instruction& instr){
 	*registerFile[(Register)instr.dest] = (*registerFile[(Register)instr.src]) - instr.imm17;
-	clear_flags();
-	set_flags((Register)instr.dest);
+	set_flags_alu(*registerFile[(Register)instr.dest]);
 }
 
 void CPU::SW(const Instruction& instr){
@@ -439,8 +433,7 @@ void CPU::XORI(const Instruction& instr){
 	uint32_t imm17 = instr.imm17;
 	sign_extend_imm17(imm17);
 	*registerFile[(Register)instr.dest] = (*registerFile[(Register)instr.src]) ^ imm17;
-	clear_flags();
-	set_flags((Register)instr.dest);
+	set_flags_alu(*registerFile[(Register)instr.dest]);
 }
 
 #if !DISABLE_JUMPS
@@ -496,7 +489,7 @@ void CPU::INTER(const Instruction& instr) {
 
 void CPU::RETI(const Instruction& instr) {
 	pc = ira - 4;
-	SERVICING_INTERRUPT = false;
+	set_flag(Flag::SERVICING_INTERRUPT, false);
 	clear_flags();
 }
 

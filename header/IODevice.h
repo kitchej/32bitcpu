@@ -1,9 +1,7 @@
 #ifndef IODEVICE_H
 #define IODEVICE_H
-#include "MemoryController.h"
-
-#include <thread>
 #include <condition_variable>
+class MemoryController;
 
 class IODevice{
 protected:

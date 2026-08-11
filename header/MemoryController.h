@@ -6,7 +6,7 @@
 #include <mutex>
 #include <map>
 
-#include "IODevice.h"
+class IODevice;
 
 #define TOTAL_MEMORY_SIZE 268435456 // ~256 MB
 #define GENERAL_MEMORY_SIZE 268353536  // ~256 MB
@@ -30,7 +30,7 @@ public:
 	void registerIODevice(IODevice* device, uint32_t readyRegAddress);
 	void writeByte(uint32_t address, uint32_t value);
 	void writeWord(uint32_t address, uint32_t value);
-	void setReadyReg(uint32_t address, bool value);
+	void setReadyReg(uint32_t address, uint32_t value);
 	uint32_t readByte(uint32_t address);
 	uint32_t readWord(uint32_t address);
 	

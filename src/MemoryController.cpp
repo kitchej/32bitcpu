@@ -1,5 +1,5 @@
 #include "../header/memoryController.h"
-#include <thread>
+#include "../header/IODevice.h"
 
 MemoryController::MemoryController() {
 	addressSpace = std::vector<uint8_t>(TOTAL_MEMORY_SIZE, 0);
@@ -46,7 +46,7 @@ void MemoryController::writeWord(uint32_t address, uint32_t value) {
 	}
 }
 
-void MemoryController::setReadyReg(uint32_t address, bool value) {
+void MemoryController::setReadyReg(uint32_t address, uint32_t value) {
 	// Enables IO to reset its ready register without signialing itself
 	std::lock_guard<std::mutex> lock(addressSpaceLock);
 	addressSpace.at(address) = value & 0xFF;

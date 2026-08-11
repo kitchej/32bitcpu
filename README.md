@@ -26,7 +26,7 @@ LC-32 is RISC style architecture based on the LC-3 and MIPS architectures
 | -----------|----------- | ----------- |
 |$IRA| 26| Interrupt Return Addresss
 |$PC| 27 | Program Counter
-|$FLAGS| 28 | BIT 31: Zero, BIT 30: Negative, BIT 29: Postive, BIT 28: D_ZERO, BIT 27: SERVICING_INTERRUPT 
+|$FLAGS| 28 | BIT 31: Zero, BIT 30: Negative, BIT 29: Postive, BIT 28: D_ZERO, BIT 27: SERVICING_INTERRUPT, BIT 26: HALT
 |$IR| 29 |Instruction Register
 |$MAR| 30 |Memory Address Register
 |$MDR| 31 |Memory Data Register
