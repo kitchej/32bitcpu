@@ -4,16 +4,24 @@
 #include <vector>
 #include <cstdint>
 
-#include "header/mmu.h"
+#include "header/memoryController.h"
 #include "header/CPU.h"
 #include "header/Terminal.h"
 
-#define TERM_READY_BIT 0X4000
-#define TERM_DATA_REG 0X4001
+#define TERM_CHAR_REG 0x4000
+#define TERM_READY_REG 0x4001
 
 
 int main(int argc, char* argv[]) {
 		std::cout << "LC-32 Emulator written by Joshua Kitchen" << std::endl;
+
+		uint32_t test = 0x10000;
+		int32_t test1 = 0x10000;
+
+		test = test >> 5;
+		test1 = test1 >> 5;
+
+		std::cout << test << '\n' << test1 << std::endl;
 		
 		std::string file = "";
 		if (argc > 1) {
@@ -55,27 +63,10 @@ int main(int argc, char* argv[]) {
 		Load modules here
 		*/
 
-		MMU* mmu = new MMU(bytes);
-		uint8_t testByte = mmu->readByte(GENERAL_MEMORY_OFFSET + 4);
-		uint32_t testWord = mmu->readWord(GENERAL_MEMORY_OFFSET + 4);
-
-
-
-		Terminal* term = new Terminal(mmu, TERM_DATA_REG, TERM_READY_BIT);
-		term->start();
-
-		for (char i : "Hello World!") {
-			while (term->isReady()) {}
-			mmu->writeByteIO(TERM_DATA_REG, TERM_READY_BIT, (uint32_t)i, true);
-		}
-
-		term->stop();
-		delete term;
-		delete mmu;
-
-
-		//CPU* cpu = new CPU(bytes);
-		//cpu->mainloop();
-
+		MemoryController* memoryController = new MemoryController(bytes);
+		memoryController->writeWord(HARDWARE_INTERRUPT_TABLE - 16, 1);
+		memoryController->writeWord(1, 0x84000000);
+		CPU* cpu = new CPU(memoryController);
+		cpu->mainloop();
 		return 0;
 }

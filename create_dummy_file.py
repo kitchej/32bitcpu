@@ -15,6 +15,7 @@ FILE_SIZE = 268353536
 INSTRUCT_OFFSET = 0
 DATA_OFFSET = 0
 
+
 # Opcode definitions (matching the CPU's Opcode enum)
 OPCODES = {
 	'NOP': 0,
@@ -46,11 +47,13 @@ OPCODES = {
 	'SUBI': 26,
 	'SW': 27,
 	'SWI': 28,
-	'TRAP': 29,
+	'INTER': 29,
 	'XOR': 30,
 	'XORI': 31,
 	'HALT': 32,
+	'RETI': 33,
 }
+
 
 def encode_rtype(opcode, dest, src, trgt):
 	"""
@@ -91,7 +94,7 @@ def write_uint32_to_buffer(buffer, offset, value):
 def print_word_hexdump(buffer, start_offset, end_offset):
 	"""
 	Print a 4-byte-per-row hexdump of the buffer, reading each row as a
-	little-endian uint32_t (matching MMU::readWord's byte assembly), so the
+	little-endian uint32_t (matching memoryController::readWord's byte assembly), so the
 	printed value is exactly what the CPU will decode -- no manual byte
 	reversal needed to compare against expected instruction values.
 
@@ -101,26 +104,7 @@ def print_word_hexdump(buffer, start_offset, end_offset):
 		word = struct.unpack_from('<I', buffer, offset)[0]
 		print(f"{offset:08x}: {word:08x}")
 
-def main():
-	# File configuration
-	print(f"Creating buffer of {FILE_SIZE:,} bytes ({FILE_SIZE / (1024*1024):.2f} MB)...")
-
-	# Create byte buffer
-	buffer = bytearray(FILE_SIZE)
-	offset = INSTRUCT_OFFSET
-
-	if JUMPS_ONLY:
-		instructions = [
-			encode_jtype(OPCODES['JMP'], offset26=1),
-			MAX_UINT_32,
-			encode_jtype(OPCODES['JAL'], offset26=1),
-			MAX_UINT_32,
-			encode_jtype(OPCODES['JALA'], offset26=1),
-			MAX_UINT_32,
-
-		]
-	else:
-		instructions = [
+master_instruction_list = [
 			encode_itype(OPCODES['ADDI'], dest=1, src=1, imm17=-1),
 			encode_rtype(OPCODES['NOP'], 0, 0, 0),
 			encode_rtype(OPCODES['ADD'], dest=1, src=1, trgt=2),
@@ -150,10 +134,32 @@ def main():
 			encode_itype(OPCODES['SUBI'], dest=1, src=2, imm17=50),
 			encode_itype(OPCODES['SW'], dest=1, src=0, imm17=200),
 			encode_itype(OPCODES['SWI'], dest=1, src=2, imm17=0),
-			encode_jtype(OPCODES['TRAP'], offset26=1),
+			encode_jtype(OPCODES['INTER'], offset26=1),
 			encode_rtype(OPCODES['XOR'], dest=1, src=2, trgt=3),
-			encode_itype(OPCODES['XORI'], dest=1, src=2, imm17=64)
+			encode_itype(OPCODES['XORI'], dest=1, src=2, imm17=64),
+			encode_jtype(OPCODES['RETI'], offset26=16)
+]
+
+def main():
+	# File configuration
+	print(f"Creating buffer of {FILE_SIZE:,} bytes ({FILE_SIZE / (1024*1024):.2f} MB)...")
+
+	# Create byte buffer
+	buffer = bytearray(FILE_SIZE)
+	offset = INSTRUCT_OFFSET
+
+	if JUMPS_ONLY:
+		instructions = [
+			encode_jtype(OPCODES['JMP'], offset26=1),
+			MAX_UINT_32,
+			encode_jtype(OPCODES['JAL'], offset26=1),
+			MAX_UINT_32,
+			encode_jtype(OPCODES['JALA'], offset26=1),
+			MAX_UINT_32,
+
 		]
+	else:
+		instructions = master_instruction_list
 
 	print(f"Writing {len(instructions)} instructions to buffer.")
 	for instr in instructions:

@@ -21,43 +21,46 @@
     <ClCompile Include="src\CPU.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\mmu.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\BasicIODevice.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\WinKeyboard.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Terminal.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\MemoryController.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\LC32.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="IODevice.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Instruction Set.md" />
+    <None Include="README.md" />
     <None Include="create_dummy_file.py" />
     <None Include=".gitignore" />
     <None Include="tests\32bitcpu.Tests.vcxproj" />
     <None Include="tests\32bitcpu.Tests.vcxproj.filters" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="header\mmu.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="header\CPU.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="header\BasicIODevice.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="header\WinKeyboard.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="header\InputDevice.h">
+    <ClInclude Include="header\Terminal.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="header\Terminal.h">
+    <ClInclude Include="header\MemoryController.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="header\LC32.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="header\IODevice.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
