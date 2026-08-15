@@ -5,7 +5,6 @@
 #include <map>
 #include "memoryController.h"
 
-#define DISABLE_JUMPS true
 #define HARDWARE_INTERRUPT_TABLE 0X3FFF
 #define SOFTWARE_INTERRUPT_TABLE  0xFFFFFFF
 
@@ -85,16 +84,85 @@ enum Flag : uint32_t {
 	HALT = 26
 };
 
+enum class CmdFmt {
+	R_TYPE,
+	I_TYPE,
+	J_TYPE
+};
+
+typedef struct R_Instruction {
+	Opcode opcode;
+	uint8_t dest;
+	uint8_t src;
+	uint8_t trgt;
+	uint8_t shamt;
+} R_Instruction;
+
+typedef struct I_Instruction {
+	Opcode opcode;
+	uint8_t dest;
+	uint8_t src;
+	uint32_t imm17;
+} I_Instruction;
+
+
+typedef struct J_Instruction {
+	Opcode opcode;
+	uint32_t offset26;
+} J_Instruction;
+
+
+// I plan to migrate to the above structs, but until then below is what you should use
+// BUT IF YOU CHAGNE YOUR MIND, DONT DELETE THEM! THE ASSEMBLER USES THEM!
+
 typedef struct Instruction {
 	Opcode opcode;
 	uint8_t dest;
 	uint8_t src;
 	uint8_t trgt;
+	uint8_t shamt;
 	uint32_t imm17;
 	uint32_t offset26;
 } Instruction;
 
 using OP_FPTR = void (CPU::*)(const Instruction&);
+
+const std::map<Opcode, CmdFmt> instructionFormats = {
+	{ Opcode::NOP,   CmdFmt::R_TYPE },
+	{ Opcode::ADD,   CmdFmt::R_TYPE },
+	{ Opcode::ADDI,  CmdFmt::I_TYPE },
+	{ Opcode::AND,   CmdFmt::R_TYPE },
+	{ Opcode::ANDI,  CmdFmt::I_TYPE },
+	{ Opcode::BRN,   CmdFmt::J_TYPE },
+	{ Opcode::BRP,   CmdFmt::J_TYPE },
+	{ Opcode::BRZ,   CmdFmt::J_TYPE },
+	{ Opcode::DIV,   CmdFmt::R_TYPE },
+	{ Opcode::JAL,   CmdFmt::J_TYPE },
+	{ Opcode::JMP,   CmdFmt::J_TYPE },
+	{ Opcode::JALA,  CmdFmt::R_TYPE },
+	{ Opcode::LB,    CmdFmt::I_TYPE },
+	{ Opcode::LBI,   CmdFmt::I_TYPE },
+	{ Opcode::LBS,   CmdFmt::R_TYPE },
+	{ Opcode::LW,    CmdFmt::I_TYPE },
+	{ Opcode::LWI,   CmdFmt::I_TYPE },
+	{ Opcode::MULT,  CmdFmt::R_TYPE },
+	{ Opcode::NOT,   CmdFmt::R_TYPE },
+	{ Opcode::OR,    CmdFmt::R_TYPE },
+	{ Opcode::ORI,   CmdFmt::I_TYPE },
+	{ Opcode::RBS,   CmdFmt::R_TYPE },
+	{ Opcode::RET,   CmdFmt::J_TYPE },
+	{ Opcode::SB,    CmdFmt::I_TYPE },
+	{ Opcode::SBI,   CmdFmt::I_TYPE },
+	{ Opcode::SUB,   CmdFmt::R_TYPE },
+	{ Opcode::SUBI,  CmdFmt::I_TYPE },
+	{ Opcode::SW,    CmdFmt::I_TYPE },
+	{ Opcode::SWI,   CmdFmt::I_TYPE },
+	{ Opcode::INTER, CmdFmt::J_TYPE },
+	{ Opcode::XOR,   CmdFmt::R_TYPE },
+	{ Opcode::XORI,  CmdFmt::I_TYPE },
+	{ Opcode::HALT,  CmdFmt::R_TYPE },
+	{ Opcode::RETI,  CmdFmt::J_TYPE },
+};
 
 class CPU {
 private:
@@ -115,18 +183,11 @@ private:
 	uint32_t pc, ir, mar, mdr, ira;
 	// Flags
 	uint32_t flags;
-	bool N_FLAG;
-	bool P_FLAG;
-	bool Z_FLAG;
-	bool D_ZERO;
-	bool HALT_FLAG;
-	bool SERVICING_INTERRUPT;
 
 	// Classes
 	MemoryController* memoryController;
 
 	// Data Structures
-	std::map<Opcode, std::vector<std::string>> instructionFormats;
 	std::vector<OP_FPTR> opTable;
 	std::map<Register, uint32_t*> registerFile;
 	std::vector<uint32_t> interruptq;
@@ -145,9 +206,13 @@ private:
 	void decode_jtype(uint32_t instr, Instruction& instrInfo);
 	void execute_instruction(const Instruction& instr);
 	void sign_extend_imm17(uint32_t &value);
+	void sign_extend_offset26(uint32_t& value);
+	void execute_jmp(const Instruction& instr);
+
 	// Initialzation methods
 	void initialize_registers();
 	void initialize_instruction_tables();
+
 	// Interrupt control
 	void service_interrupts();
 	

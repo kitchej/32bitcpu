@@ -3,42 +3,9 @@
 #include <mutex>
 #include "../header/CPU.h"
 
+#define DISABLE_JUMPS false
 
 void CPU::initialize_instruction_tables() {
-	instructionFormats[Opcode::NOP] = {"R-type"};
-	instructionFormats[Opcode::ADD] = {"R-type", "dest", "src1", "src2"};
-	instructionFormats[Opcode::ADDI] = {"I-type", "dest", "src1", "imm17"};
-	instructionFormats[Opcode::AND] = {"R-type", "dest", "src1", "src2"};
-	instructionFormats[Opcode::ANDI] = {"I-type", "dest", "src1", "imm17"};
-	instructionFormats[Opcode::BRN] = {"J-type", "offset26"};
-	instructionFormats[Opcode::BRP] = {"J-type", "offset26"};
-	instructionFormats[Opcode::BRZ] = {"J-type", "offset26"};
-	instructionFormats[Opcode::DIV] = {"R-type", "dest", "src1", "src2"};
-	instructionFormats[Opcode::JAL] = {"J-type", "offset26"};
-	instructionFormats[Opcode::JMP] = {"J-type", "offset26"};
-	instructionFormats[Opcode::JALA] = {"R-type", "src1"};
-	instructionFormats[Opcode::LB] = {"I-type", "dest", "src1", "imm17"};
-	instructionFormats[Opcode::LBI] = {"I-type", "dest", "imm17"};
-	instructionFormats[Opcode::LBS] = {"I-type", "dest", "src1", "imm17"};
-	instructionFormats[Opcode::LW] = {"I-type", "dest", "src1", "imm17"};
-	instructionFormats[Opcode::LWI] = {"I-type", "dest", "imm17"};
-	instructionFormats[Opcode::MULT] = {"R-type", "dest", "src1", "src2"};
-	instructionFormats[Opcode::NOT] = {"R-type", "dest", "src1"};
-	instructionFormats[Opcode::OR] = {"R-type", "dest", "src1", "src2"};
-	instructionFormats[Opcode::ORI] = {"I-type", "dest", "src1", "imm17"};
-	instructionFormats[Opcode::RBS] = {"I-type", "dest", "src1", "imm17"};
-	instructionFormats[Opcode::RET] = {"J-type"};
-	instructionFormats[Opcode::SB] = {"I-type", "dest", "src1", "imm17"};
-	instructionFormats[Opcode::SBI] = {"I-type", "dest", "imm17"};
-	instructionFormats[Opcode::SUB] = {"R-type", "dest", "src1", "src2"};
-	instructionFormats[Opcode::SUBI] = {"I-type", "dest", "src1", "imm17"};
-	instructionFormats[Opcode::SW] = {"I-type", "dest", "src1", "imm17"};
-	instructionFormats[Opcode::SWI] = {"I-type", "dest", "imm17"};
-	instructionFormats[Opcode::INTER] = {"J-type"};
-	instructionFormats[Opcode::XOR] = {"R-type", "dest", "src1", "src2"};
-	instructionFormats[Opcode::XORI] = {"I-type", "dest", "src1", "imm17"};
-	instructionFormats[Opcode::HALT] = { "R-type"};
-	instructionFormats[Opcode::RETI] = { "J-type"};
 	opTable = std::vector<OP_FPTR>{
 		&CPU::NOP,
 		&CPU::ADD,
@@ -86,30 +53,32 @@ void CPU::initialize_registers() {
 	sp = 0;  sf = 0;
 	pc = GENERAL_MEMORY_OFFSET;  ir = 0;  mar = 0;  mdr = 0, ira = 0;
 
-	 registerFile[Register::R0] = &r0;
-	 registerFile[Register::R1] = &r1;
-	 registerFile[Register::R2] = &r2;
-	 registerFile[Register::R3] = &r3;
-	 registerFile[Register::R4] = &r4;
-	 registerFile[Register::R5] = &r5;
-	 registerFile[Register::R6] = &r6;
-	 registerFile[Register::R7] = &r7;
-	 registerFile[Register::RA] = &ra;
-	 registerFile[Register::A0] = &a0;
-	 registerFile[Register::A1] = &a1;
-	 registerFile[Register::A2] = &a2;
-	 registerFile[Register::V0] = &v0;
-	 registerFile[Register::V1] = &v1;
-	 registerFile[Register::SP] = &sp;
-	 registerFile[Register::SF] = &sf;
-	 registerFile[Register::R8] = &r8;
-	 registerFile[Register::R9] = &r9;
-	 registerFile[Register::R10] = &r10;
-	 registerFile[Register::R11] = &r11;
-	 registerFile[Register::R12] = &r12;
-	 registerFile[Register::R13] = &r13;
-	 registerFile[Register::R14] = &r14;
-	 registerFile[Register::R15] = &r15;
+	registerFile = {
+	   { Register::R0,  &r0  },
+	   { Register::R1,  &r1  },
+	   { Register::R2,  &r2  },
+	   { Register::R3,  &r3  },
+	   { Register::R4,  &r4  },
+	   { Register::R5,  &r5  },
+	   { Register::R6,  &r6  },
+	   { Register::R7,  &r7  },
+	   { Register::R8,  &r8  },
+	   { Register::R9,  &r9  },
+	   { Register::R10, &r10 },
+	   { Register::R11, &r11 },
+	   { Register::R12, &r12 },
+	   { Register::R13, &r13 },
+	   { Register::R14, &r14 },
+	   { Register::R15, &r15 },
+	   { Register::RA,  &ra  },
+	   { Register::A0,  &a0  },
+	   { Register::A1,  &a1  },
+	   { Register::A2,  &a2  },
+	   { Register::V0,  &v0  },
+	   { Register::V1,  &v1  },
+	   { Register::SP,  &sp  },
+	   { Register::SF,  &sf  },
+	};
 }
 
 CPU::CPU() {
@@ -128,22 +97,25 @@ CPU::~CPU() {
 	delete memoryController;
 }
 
+void CPU::mainloop() {
+	while (!get_flag(Flag::HALT)) {
+		fetch_instruction();
+		Instruction curr_instr = decode_instruction();
+		execute_instruction(curr_instr);
+		service_interrupts();
+		pc += 4;
+	}
+}
+
 Instruction CPU::decode_instruction() {
 	Instruction instrInfo;
-	uint8_t opcode = (ir >> 26) & MASK_6BIT;
-	instrInfo.opcode = static_cast<Opcode>(opcode);
-	// Determine the instruction format based on the opcode
-	auto type = instructionFormats.find(instrInfo.opcode);
-	if (type != instructionFormats.end()) {
-		const std::vector<std::string>& format = type->second;
-		if (format[0] == "R-type") {
-			decode_rtype(ir, instrInfo);
-		}
-		else if (format[0] == "I-type") {
-			decode_itype(ir, instrInfo);
-		}
-		else if (format[0] == "J-type") {
-			decode_jtype(ir, instrInfo);
+	instrInfo.opcode = (Opcode)((ir >> 26) & MASK_6BIT);
+	auto it = instructionFormats.find(instrInfo.opcode);
+	if (it != instructionFormats.end()) {
+		switch (it->second) {
+		case CmdFmt::R_TYPE: decode_rtype(ir, instrInfo); break;
+		case CmdFmt::I_TYPE: decode_itype(ir, instrInfo); break;
+		case CmdFmt::J_TYPE: decode_jtype(ir, instrInfo); break;
 		}
 	}
 	return instrInfo;
@@ -153,6 +125,7 @@ void CPU::decode_rtype(uint32_t instr, Instruction& instrInfo) {
 	instrInfo.dest = (instr >> 21) & MASK_5BIT;
 	instrInfo.src = (instr >> 16) & MASK_5BIT;
 	instrInfo.trgt = (instr >> 11) & MASK_5BIT;
+	instrInfo.shamt = (instr >> 5) & MASK_5BIT;
 	instrInfo.imm17 = 0;
 	instrInfo.offset26 = 0;
 }
@@ -185,9 +158,16 @@ void CPU::execute_instruction(const Instruction& instr) {
 
 void CPU::sign_extend_imm17(uint32_t &value) {
 	int32_t imm17 = (int32_t)value;
-	imm17 = imm17 << 15;
+	imm17 = imm17 << 15; // 32-17 = 15
 	imm17 = imm17 >> 15;
 	value = (uint32_t)imm17;
+}
+
+void CPU::sign_extend_offset26(uint32_t& value) {
+	int32_t offset26 = (int32_t)value;
+	offset26 = offset26 << 6; // 32-26 = 6
+	offset26 = offset26 >> 6;
+	value = (uint32_t)offset26;
 }
 
 void CPU::reset() {
@@ -197,16 +177,6 @@ void CPU::reset() {
 void CPU::interrupt(uint32_t interVec) {
 	std::lock_guard<std::mutex> lock(interruptLock);
 	interruptq.insert(interruptq.begin(), interVec);
-}
-
-void CPU::mainloop() {
-	while (!get_flag(Flag::HALT)) {
-		fetch_instruction();
-		Instruction curr_instr = decode_instruction();
-		execute_instruction(curr_instr);
-		service_interrupts();
-		pc += 4;
-	}
 }
 
 void CPU::service_interrupts() {
@@ -273,6 +243,12 @@ bool CPU::get_flag(Flag flag) {
 	return flags & (1 << flag);
 }
 
+void CPU::execute_jmp(const Instruction& instr) {
+	uint32_t offset26 = instr.offset26;
+	sign_extend_offset26(offset26);
+	pc += (offset26 * 4);
+}
+
 // R-type Instructions (Except JALA)
 void CPU::NOP(const Instruction& instr) { clear_flags(); }
 void CPU::ADD(const Instruction& instr){
@@ -298,6 +274,12 @@ void CPU::DIV(const Instruction& instr){
 	set_flags_alu(*registerFile[(Register)instr.dest]);
 }
 
+
+void CPU::LBS(const Instruction& instr) {
+	*registerFile[(Register)instr.dest] = (*registerFile[(Register)instr.src]) << instr.shamt;
+	clear_flags();
+}
+
 void CPU::MULT(const Instruction& instr){
 	// All this casting crap is needed to get true signed mulitplcation in cpp
 	int32_t dest = (int32_t)*registerFile[(Register)instr.dest];
@@ -314,6 +296,12 @@ void CPU::NOT(const Instruction& instr){
 void CPU::OR(const Instruction& instr){
 	*registerFile[(Register)instr.dest] = (*registerFile[(Register)instr.src]) | (*registerFile[(Register)instr.trgt]);
 	set_flags_alu(*registerFile[(Register)instr.dest]);
+}
+
+
+void CPU::RBS(const Instruction& instr) {
+	*registerFile[(Register)instr.dest] = (*registerFile[(Register)instr.src]) >> instr.shamt;
+	clear_flags();
 }
 
 void CPU::SUB(const Instruction& instr){
@@ -348,7 +336,9 @@ void CPU::ANDI(const Instruction& instr) {
 }
 
 void CPU::LB(const Instruction& instr){
-	mar = instr.imm17 + pc;
+	uint32_t imm17 = instr.imm17;
+	sign_extend_imm17(imm17);
+	mar = imm17 + pc;
 	mdr = memoryController->readByte(mar);
 	*registerFile[(Register)instr.dest] = mdr;
 	clear_flags();
@@ -361,13 +351,10 @@ void CPU::LBI(const Instruction& instr){
 	clear_flags();
 }
 
-void CPU::LBS(const Instruction& instr){
-	*registerFile[(Register)instr.dest] = (*registerFile[(Register)instr.src]) << instr.imm17;
-	clear_flags();
-}
-
 void CPU::LW(const Instruction& instr){
-	mar = instr.imm17 + pc;
+	uint32_t imm17 = instr.imm17;
+	sign_extend_imm17(imm17);
+	mar = imm17 + pc;
 	mdr = memoryController->readWord(mar);
 	*registerFile[(Register)instr.dest] = mdr;
 	clear_flags();
@@ -387,13 +374,10 @@ void CPU::ORI(const Instruction& instr){
 	set_flags_alu(*registerFile[(Register)instr.dest]);
 }
 
-void CPU::RBS(const Instruction& instr){
-	*registerFile[(Register)instr.dest] = (*registerFile[(Register)instr.src]) >> instr.imm17;
-	clear_flags();
-}
-
 void CPU::SB(const Instruction& instr){
-	mar = instr.imm17 + pc;
+	uint32_t imm17 = instr.imm17;
+	sign_extend_imm17(imm17);
+	mar = imm17 + pc;
 	mdr = *registerFile[(Register)instr.src];
 	memoryController->writeByte(mar, mdr);
 	clear_flags(); 
@@ -414,7 +398,9 @@ void CPU::SUBI(const Instruction& instr){
 }
 
 void CPU::SW(const Instruction& instr){
-	mar = instr.imm17 + pc;
+	uint32_t imm17 = instr.imm17;
+	sign_extend_imm17(imm17);
+	mar = imm17 + pc;
 	mdr = *registerFile[(Register)instr.src];
 	memoryController->writeByte(mar, mdr);
 	clear_flags();
@@ -446,34 +432,34 @@ void CPU::JALA(const Instruction& instr) {
 }
 
 void CPU::BRN(const Instruction& instr) {
-	if (N_FLAG) {
-		pc += (instr.offset26) * 4;
+	if (get_flag(Flag::NEG)) {
+		execute_jmp(instr);
 	}
 	clear_flags();
 }
 
 void CPU::BRP(const Instruction& instr) {
-	if (P_FLAG) {
-		pc += (instr.offset26) * 4;
+	if (get_flag(Flag::POS)) {
+		execute_jmp(instr);
 	}
 	clear_flags();
 }
 
 void CPU::BRZ(const Instruction& instr) {
-	if (Z_FLAG) {
-		pc += (instr.offset26) * 4;
+	if (get_flag(Flag::ZERO)) {
+		execute_jmp(instr);
 	}
 	clear_flags();
 }
 
 void CPU::JAL(const Instruction& instr) {
 	ra = pc;
-	pc += (instr.offset26) * 4;
+	execute_jmp(instr);
 	clear_flags();
 }
 
 void CPU::JMP(const Instruction& instr) {
-	pc += (instr.offset26) * 4;
+	execute_jmp(instr);
 	clear_flags();
 }
 

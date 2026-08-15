@@ -33,14 +33,19 @@ LC-32 is RISC style architecture based on the LC-3 and MIPS architectures
 
 
 #### Direct Addressing
-256 MB of address space (0x00000000-0x0FFFFFFF) is directly addressable by J-type instruction offsets
-##### Memory Map of the  LC-32
-|Region|Range|Size|
-| ----------- | ----------- | ----------- | ----------- |
-|Kernel Code|0x00000000-0x00003FFF | 16,384 bytes (16 KB)
-|Reserved for I/O|0x00004000-0x00013FFF | 65,536 bytes (64 KB)
-|General Purpose|0x00014000-0x0FFFFFFF | 268,353,536 bytes (256 MB)
-|TOTAL|0x00000000 - 0x0FFFFFFF|268,435,456 bytes (256 MB)|
+256 MB of address space is directly addressable by J-type instruction offsets. Offsets are signed and represent the number of words before (negative offsets) or after (postive offsets) the PC + 4.
+#### Memory Map of the  LC-32
+ 
+| Region | Range | Size |
+|---|---|---|
+| Kernel Code | 0x00000000–0x00003FFF | 16,384 bytes (16 KB) |
+| Reserved for I/O | 0x00004000–0x00013FFF | 65,536 bytes (64 KB) |
+| General Purpose | 0x00014000–0x07FFFFFC | 134,135,805 bytes (128 MB) |
+| Unused | 0x08000000–0xF7FFFFFF |
+| Software Interrupt Table | 0xF8000000–0xF8003FFF | 16,384 bytes (16 KB)|
+| Stack (grows downward from top) | 0xF8004000–0xFFFFFFFC | 134,201,341 (128 MB) |
+
+
 
 ## Interrupts
 Both hardware and software can send interrupts. Interrupt vectors are 32-bit. Vectors 0x00 - 0xFF are reserved for hardware interrupts with the remaining vectors avalible for software interrupts.
@@ -49,7 +54,7 @@ The hardware interrupt table starts at the top of kernel ROM at addresss 0x3FFF 
 ## Instruction Formats
 
 ### R-TYPE INSTRUCTIONS
-**OPCODE** [31-26: 6 bits] | **DEST** [25-21: 5 bits] | **SRC** [21-16: 5 bits] | **TRGT** [15-11: 5 bits] | **Unused** [10-0: 11 bits]
+**OPCODE** [31-26: 6 bits] | **DEST** [25-21: 5 bits] | **SRC** [21-16: 5 bits] | **TRGT** [15-11: 5 bits] | **SHAMT** [10-6: 5 bits] | **UNUSED** [5-0: 6 bits]
 
 ### I-TYPE INSTRUCTIONS
 **OPCODE** [31-26: 6 bits] | **DEST** [25-21: 5 bits] | **SRC** [20-16: 5 bits] | **IMM-17** [16-0: 17 bits]
@@ -66,7 +71,6 @@ The hardware interrupt table starts at the top of kernel ROM at addresss 0x3FFF 
 |jmp 0x10|0x28000010|00101000000000000000000000010000
 
 ## Instruction Set
-33 of 64 possible 6-bit opcode values are assigned; 31 remain free for future instructions. Ordered by opcode.
 
 | FORMAT | NAME | MNEMONIC | OPCODE | OPERATION | ARG1 | ARG2 | ARG3 | 
 | ----------- | ----------- | ----------- | ----------- | ----------- | ----------- | ----------- | ----------- |
@@ -84,14 +88,14 @@ The hardware interrupt table starts at the top of kernel ROM at addresss 0x3FFF 
 |R|Jump and Link Absolute|JAlA|0x0B|PC=SRC + 4; ra=pc = 4|SRC||
 |I|Load Byte|LB|0x0C|DEST=MEM[PC+4+OFFSET]|DEST|OFFSET18|
 |I|Load Byte Indirect|LBI|0x0D|DEST=MEM[BASE REG]|DEST|BASE REG|
-|I|Left Bit Shift|LBS|0x0E|DEST=SRC<<SHIFT AMT|DEST|SRC|SHIFT AMT
+|R|Left Bit Shift|LBS|0x0E|DEST=SRC<<SHIFT AMT|DEST|SRC|SHIFT AMT
 |I|Load Word|LW|0x0F|DEST=MEM[PC+4+(OFFSET*4)]|DEST|OFFSET18|
 |I|Load Word Indirect|LWI|0x10|DEST=MEM[BASE REG]|DEST|BASE REG|
 |R|Multiply|MULT|0x11|DEST=SRC*TRGT|DEST|SRC|TRGT
 |R|Logical Not|NOT|0x12|DEST=~SRC|DEST|SRC|
 |R|Inclusive Or|OR|0x13|DEST=SRC\|TRGT|DEST|SRC|TRGT
 |I|Inclusive Or Immediate|ORI|0x14|DEST=SRC\|imm17|DEST|SRC|imm17
-|I|Right Bit Shift|RBS|0x15|DEST=SRC>>SHIFT AMT|DEST|SRC|SHIFT AMT
+|R|Right Bit Shift|RBS|0x15|DEST=SRC>>SHIFT AMT|DEST|SRC|SHIFT AMT
 |J|Return from Subroutine|RET|0x16|PC=$RA||||
 |I|Store Byte|SB|0x17|MEM[PC+4+OFFSET]=SRC|SRC|OFFSET18|
 |I|Store Byte Indirect|SBI|0x18|MEM[BASE REG]=SRC|SRC|BASE REG|
