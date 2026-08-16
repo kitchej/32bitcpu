@@ -5,7 +5,7 @@ Written by Joshua Kitchen
 
 LC-32 is RISC style architecture based on the LC-3 and MIPS architectures
 
-|
+||
 | ----------- | -----------
 |**Word Size**|32 Bits|
 |**Endianess**|Little|
@@ -24,9 +24,9 @@ LC-32 is RISC style architecture based on the LC-3 and MIPS architectures
 ### Internal Registers
 | Name | Value | Purpose 
 | -----------|----------- | ----------- |
-|$IRA| 26| Interrupt Return Addresss
+|$IRA| 26| Interrupt Return Address
 |$PC| 27 | Program Counter
-|$FLAGS| 28 | BIT 31: Zero, BIT 30: Negative, BIT 29: Postive, BIT 28: D_ZERO, BIT 27: SERVICING_INTERRUPT, BIT 26: HALT
+|$FLAGS| 28 | BIT 31: Zero, BIT 30: Negative, BIT 29: Positive, BIT 28: D_ZERO, BIT 27: SERVICING_INTERRUPT, BIT 26: HALT
 |$IR| 29 |Instruction Register
 |$MAR| 30 |Memory Address Register
 |$MDR| 31 |Memory Data Register
@@ -49,7 +49,7 @@ LC-32 is RISC style architecture based on the LC-3 and MIPS architectures
 
 ## Interrupts
 Both hardware and software can send interrupts. Interrupt vectors are 32-bit. Vectors 0x00 - 0xFF are reserved for hardware interrupts with the remaining vectors avalible for software interrupts.
-The hardware interrupt table starts at the top of kernel ROM at addresss 0x3FFF and grows downward. The software interrupt table starts at the top of General Purpose memory at 0xFFFFFFF and grows downward.
+The hardware interrupt table starts at the top of kernel ROM at address 0x3FFF and grows downward. The software interrupt table starts at the top of General Purpose memory at 0xFFFFFFF and grows downward.
 ***All interrupt handlers must end with RETI to ensure other interrupts can be serviced!***
 ## Instruction Formats
 
