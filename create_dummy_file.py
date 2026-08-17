@@ -2,16 +2,13 @@
 """
 !!! AI GENERATED !!!
 (But perfected by yours truly)
-
-Generates a binary file with encoded instructions for each format type.
-Creates a byte array spanning from 0x00005000 to 0x0FFFFFFF
 """
 
 import struct
 from sys import byteorder
 MAX_UINT_32 = 0xFFFFFFFF
 JUMPS_ONLY = False
-FILE_SIZE = 268353536
+FILE_SIZE = 133070848
 INSTRUCT_OFFSET = 0
 DATA_OFFSET = 0
 
@@ -141,10 +138,6 @@ master_instruction_list = [
 ]
 
 def main():
-	# File configuration
-	print(f"Creating buffer of {FILE_SIZE:,} bytes ({FILE_SIZE / (1024*1024):.2f} MB)...")
-
-	# Create byte buffer
 	buffer = bytearray(FILE_SIZE)
 	offset = INSTRUCT_OFFSET
 

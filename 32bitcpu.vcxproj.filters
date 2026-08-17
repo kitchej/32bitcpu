@@ -33,7 +33,7 @@
     <ClCompile Include="src\LC32.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="IODevice.cpp">
+    <ClCompile Include="src\IODevice.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -61,6 +61,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="header\IODevice.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="header\LC32_Globals.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

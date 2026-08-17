@@ -6,3 +6,6 @@ x64/
 Debug/
 *.vcxproj
 *.filters
+*.users
+*.sln
+*.json

@@ -8,25 +8,18 @@
 
 class IODevice;
 
-#define TOTAL_MEMORY_SIZE 268435456 // ~256 MB
-#define GENERAL_MEMORY_SIZE 268353536  // ~256 MB
-#define KERNAL_MEMORY_SIZE 16384  // ~16 KB
-#define IO_MEMORY_SIZE 65536 // ~64 KB
-#define KERNAL_MEMORY_OFFSET 0x00000000
-#define IO_MEMORY_OFFSET 0x4000
-#define GENERAL_MEMORY_OFFSET 0x14000
-
 class MemoryController {
 	
-	std::vector<uint8_t> addressSpace; // IO, kernel, and main memory all share this container
+	std::vector<uint8_t> *addressSpace; // IO, kernel, and main memory all share this container
 	std::map<std::uint32_t, IODevice*> IODeviceMap;
 	std::mutex addressSpaceLock;
 	std::mutex IODeviceMapLock;
-
-
+	uint32_t romStart;
+	uint32_t romEnd;
 public:
 	MemoryController();
-	MemoryController(std::vector<uint8_t>* buffer);
+	MemoryController(std::vector<uint8_t>* buffer, uint32_t romStart, uint32_t romEnd);
+	~MemoryController();
 	void registerIODevice(IODevice* device, uint32_t readyRegAddress);
 	void writeByte(uint32_t address, uint32_t value);
 	void writeWord(uint32_t address, uint32_t value);

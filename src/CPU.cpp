@@ -2,8 +2,9 @@
 #include <iostream>
 #include <mutex>
 #include "../header/CPU.h"
+#include "../header/LC32_Globals.h"
 
-#define DISABLE_JUMPS false
+#define DISABLE_JUMPS true
 
 void CPU::initialize_instruction_tables() {
 	opTable = std::vector<OP_FPTR>{
@@ -91,10 +92,6 @@ CPU::CPU(MemoryController* memoryController_obj) {
 	initialize_registers();
 	initialize_instruction_tables();
 	memoryController = memoryController_obj;
-}
-
-CPU::~CPU() {
-	delete memoryController;
 }
 
 void CPU::mainloop() {
@@ -191,17 +188,12 @@ void CPU::service_interrupts() {
 			interJmp = memoryController->readWord(HARDWARE_INTERRUPT_TABLE - (interVec * 4));
 		}
 		else {
-			interJmp = memoryController->readWord(SOFTWARE_INTERRUPT_TABLE - (interVec * 4));
+			interJmp = memoryController->readWord(SOFTWARE_INTERRUPT_TABLE + (interVec * 4));
 		}
 		interruptq.pop_back();
-		if (interJmp <= 0) { 
-			// Invalid interrupt vector, do nothing
-		}
-		else {
-			ira = pc + 4;
-			pc = interJmp - 4; // to account for hardcoded pc + 4
-			set_flag(Flag::SERVICING_INTERRUPT, true);
-		}
+		ira = pc + 4;
+		pc = interJmp - 4; // to account for hardcoded pc + 4
+		set_flag(Flag::SERVICING_INTERRUPT, true);
 	}
 	else {
 		set_flag(Flag::SERVICING_INTERRUPT, false);

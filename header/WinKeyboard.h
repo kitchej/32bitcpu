@@ -1,9 +1,8 @@
 #ifndef WINKEYBOARD_H
 #define WINKEYBOARD_H
-#include "../header/BasicIODevice.h"
-#include <cstdint>
+#include "IODevice.h"
 
-class WinKeyboard : BasicIODevice {
+class WinKeyboard : IODevice {
 
 };
 

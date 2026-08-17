@@ -14,14 +14,6 @@
 
 int main(int argc, char* argv[]) {
 		std::cout << "LC-32 Emulator written by Joshua Kitchen" << std::endl;
-
-		uint32_t test = 0x10000;
-		int32_t test1 = 0x10000;
-
-		test = test >> 5;
-		test1 = test1 >> 5;
-
-		std::cout << test << '\n' << test1 << std::endl;
 		
 		std::string file = "";
 		if (argc > 1) {
@@ -63,10 +55,8 @@ int main(int argc, char* argv[]) {
 		Load modules here
 		*/
 
-		MemoryController* memoryController = new MemoryController(bytes);
-		memoryController->writeWord(HARDWARE_INTERRUPT_TABLE - 16, 1);
-		memoryController->writeWord(1, 0x84000000);
-		CPU* cpu = new CPU(memoryController);
+		MemoryController *memoryController = new MemoryController(bytes, KERNAL_MEMORY_OFFSET, KERNAL_MEMORY_END);
+		CPU *cpu = new CPU(memoryController);
 		cpu->mainloop();
 		return 0;
 }

@@ -2,8 +2,6 @@
 #define TERMINAL_H
 #include "memoryController.h"
 #include "IODevice.h"
-#include <thread>
-#include <mutex>
 
 class Terminal: IODevice {
 	MemoryController* memoryController;
