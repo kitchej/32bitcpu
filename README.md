@@ -1,5 +1,5 @@
 # LC-32 - Little Computer 32
-Written by Joshua Kitchen
+Designed by Joshua Kitchen
 
 ## Architecture Overview
 
@@ -33,10 +33,12 @@ LC-32 is RISC style architecture based on the LC-3 and MIPS architectures
 
 
 #### Direct Addressing
-128 MB of address space is directly addressable by postive J-type instruction offsets. Offsets represent the number of words before (negative offsets) or after (postive offsets) the PC + 4.
+128 MB of address space is directly addressable by positive J-type instruction offsets. Offsets represent the number of words before (negative offsets) or after (postive offsets) the PC + 4.
+
+
 #### Memory Map of the  LC-32
-128 MB address space, reachable entirely by positive 26-bit word offsets (0x00000000–0x07FFFFFC).
- 
+
+
 | Region | Range | Size |
 |---|---|---|
 | Kernel Code | 0x00000000–0x00003FFF | 16,384 bytes (16 KB) |
@@ -45,13 +47,10 @@ LC-32 is RISC style architecture based on the LC-3 and MIPS architectures
 | General Purpose RAM | 0x00018000–0x07EFFFFC | 133,070,848 bytes (127 MB) |
 | Stack | 0x07F00000–0x07FFFFFC | 1,048,576 bytes (1 MB) |
 
-
-
-
 ## Interrupts
 Both hardware and software can send interrupts. Interrupt vectors are 26-bit. Vectors 0x00 - 0x1FF (0-511) are reserved for hardware interrupts and the remaning vectors starting at 0x200 are avalible for software interrupts.
-The hardware interrupt table starts at the top of kernel ROM at address 0x3FFF and is indexed via *subracting* the vector from 0x3FFF. The software interrupt table starts at 0x00014000 and is indexed by *adding*. 
-There are 4096 possilbe software interrupts if the table is confined to addresses 0x00014000–0x00017FFF.
+The hardware interrupt table starts at the top of kernel ROM at address 0x3FFF and is indexed via *subtracting* the vector from 0x3FFF. The software interrupt table starts at 0x00014000 and is indexed by *adding*. 
+There are 4096 possible software interrupts if the table is confined to addresses 0x00014000–0x00017FFF.
 
 
 ***All interrupt handlers must end with RETI to ensure code returns to the correct address and to allow other interrupts to be serviced.***
@@ -117,4 +116,4 @@ The global stack starts at 0xFFFFFFFC and is the default value of the $SF and $S
 |R|Exclusive Or|XOR|0x1E|DEST=SRC^TRGT|DEST|SRC|TRGT
 |I|Exclusive Or Immediate|XORI|0x1F|DEST=SRC^IMM17|DEST|SRC|
 |R|Halt|HALT|0x20|Stop instruction execution||||+96
-|J|Return from Interrupt|RETI|0x20|PC=RA; SERVICING_INTERRUPTS=0||||
+|J|Return from Interrupt|RETI|0x21|PC=IRA; SERVICING_INTERRUPTS=0||||
