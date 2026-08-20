@@ -3,6 +3,8 @@
 #include <cstdint>
 #include <map>
 
+using ASMDIRECTIVE_PTR = void (*)(const std::string&);
+
 constexpr size_t TOTAL_MEMORY_SIZE = 134217728;
 constexpr size_t GENERAL_MEMORY_SIZE = 133070848; // 127 MB
 constexpr size_t KERNAL_MEMORY_SIZE = 16384;     // 16 KB
@@ -22,6 +24,8 @@ static_assert(GENERAL_MEMORY_OFFSET + GENERAL_MEMORY_SIZE <= TOTAL_MEMORY_SIZE,
 
 constexpr size_t HARDWARE_INTERRUPT_TABLE = 0X3FFF;
 constexpr size_t SOFTWARE_INTERRUPT_TABLE = 0x14000;
+
+
 
 
 

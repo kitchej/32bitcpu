@@ -64,8 +64,6 @@ private:
 	
 
 public:
-	
-
 	CPU();
 	CPU(MemoryController* memoryController_obj);
 
