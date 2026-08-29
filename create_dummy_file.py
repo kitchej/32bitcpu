@@ -7,7 +7,7 @@
 import struct
 from sys import byteorder
 MAX_UINT_32 = 0xFFFFFFFF
-JUMPS_ONLY = False
+JUMPS_ONLY = True
 FILE_SIZE = 133070848
 INSTRUCT_OFFSET = 0
 DATA_OFFSET = 0
@@ -143,13 +143,9 @@ def main():
 
 	if JUMPS_ONLY:
 		instructions = [
-			encode_jtype(OPCODES['JMP'], offset26=1),
-			MAX_UINT_32,
-			encode_jtype(OPCODES['JAL'], offset26=1),
-			MAX_UINT_32,
-			encode_jtype(OPCODES['JALA'], offset26=1),
-			MAX_UINT_32,
-
+			encode_rtype(OPCODES["XOR"], dest=0, src=0, trgt=0),
+			encode_itype(OPCODES["ADDI"], dest=0, src=0, imm17=0x61),
+			encode_itype(OPCODES["SB"], dest=0, src=0, imm17=0xAFFD)
 		]
 	else:
 		instructions = master_instruction_list

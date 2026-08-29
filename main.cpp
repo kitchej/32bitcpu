@@ -7,9 +7,10 @@
 #include "header/memoryController.h"
 #include "header/CPU.h"
 #include "header/Terminal.h"
+#include "header/IODevice.h"
 
-#define TERM_CHAR_REG 0x4000
-#define TERM_READY_REG 0x4001
+constexpr uint32_t TERM_CHAR_REG = 0x4000;
+constexpr uint32_t TERM_READY_REG = 0x4001;
 
 
 int main(int argc, char* argv[]) {
@@ -57,6 +58,11 @@ int main(int argc, char* argv[]) {
 
 		MemoryController *memoryController = new MemoryController(bytes, KERNAL_MEMORY_OFFSET, KERNAL_MEMORY_END);
 		CPU *cpu = new CPU(memoryController);
+		Terminal* terminal = new Terminal(memoryController, TERM_CHAR_REG, TERM_READY_REG);
+		memoryController->registerIODevice((IODevice*)terminal, TERM_READY_REG);
+
+		terminal->start();
 		cpu->mainloop();
+		terminal->stop();
 		return 0;
 }

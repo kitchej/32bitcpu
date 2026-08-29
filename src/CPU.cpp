@@ -6,46 +6,6 @@
 
 #define DISABLE_JUMPS true
 
-void CPU::initialize_instruction_tables() {
-	opTable = std::vector<OP_FPTR>{
-		&CPU::NOP,
-		&CPU::ADD,
-		&CPU::ADDI,
-		&CPU::AND,
-		&CPU::ANDI,
-		&CPU::BRN,
-		&CPU::BRP,
-		&CPU::BRZ,
-		&CPU::DIV,
-		&CPU::JAL,
-		&CPU::JMP,
-		&CPU::JALA,
-		&CPU::LB,
-		&CPU::LBI,
-		&CPU::LBS,
-		&CPU::LW,
-		&CPU::LWI,
-		&CPU::MULT,
-		&CPU::NOT,
-		&CPU::OR,
-		&CPU::ORI,
-		&CPU::RBS,
-		&CPU::RET,
-		&CPU::SB,
-		&CPU::SBI,
-		&CPU::SUB,
-		&CPU::SUBI,
-		&CPU::SW,
-		&CPU::SWI,
-		&CPU::INTER,
-		&CPU::XOR,
-		&CPU::XORI,
-		&CPU::HALT,
-		&CPU::RETI
-
-	};
-}
-
 void CPU::initialize_registers() {
 	flags = 0;
 	r0 = 0;  r1 = 0;  r2 = 0;  r3 = 0;  r4 = 0;  r5 = 0;  r6 = 0;  r7 = 0, r8 = 0, r9 = 0, r10 = 0, r11 = 0, r12 = 0, r13 = 0, r14 = 0, r15 = 0;
@@ -84,20 +44,19 @@ void CPU::initialize_registers() {
 
 CPU::CPU() {
 	initialize_registers();
-	initialize_instruction_tables();
 	memoryController = new MemoryController();
 }
 
 CPU::CPU(MemoryController* memoryController_obj) {
 	initialize_registers();
-	initialize_instruction_tables();
 	memoryController = memoryController_obj;
 }
 
 void CPU::mainloop() {
+	Instruction curr_instr;
 	while (!get_flag(Flag::HALT)) {
 		fetch_instruction();
-		Instruction curr_instr = decode_instruction();
+		curr_instr = decode_instruction();
 		execute_instruction(curr_instr);
 		service_interrupts();
 		pc += 4;
@@ -183,6 +142,7 @@ void CPU::service_interrupts() {
 	}
 	else if (!interruptq.empty()) {
 		uint32_t interVec = interruptq.back();
+		interruptq.pop_back();
 		uint32_t interJmp = 0;
 		if (interVec <= 0xFF) {
 			interJmp = memoryController->readWord(HARDWARE_INTERRUPT_TABLE - (interVec * 4));
@@ -190,7 +150,6 @@ void CPU::service_interrupts() {
 		else {
 			interJmp = memoryController->readWord(SOFTWARE_INTERRUPT_TABLE + (interVec * 4));
 		}
-		interruptq.pop_back();
 		ira = pc + 4;
 		pc = interJmp - 4; // to account for hardcoded pc + 4
 		set_flag(Flag::SERVICING_INTERRUPT, true);
@@ -226,7 +185,6 @@ void CPU::set_flags_alu(uint32_t regDestVal) {
 		set_flag(Flag::NEG, 1);
 	}
 	else {
-		// Postive
 		set_flag(Flag::POS, 1);
 	}
 }

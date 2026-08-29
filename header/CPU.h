@@ -34,7 +34,43 @@ private:
 	MemoryController* memoryController;
 
 	// Data Structures
-	std::vector<OP_FPTR> opTable;
+	std::vector<OP_FPTR> opTable = std::vector<OP_FPTR>{
+	&CPU::NOP,
+	&CPU::ADD,
+	&CPU::ADDI,
+	&CPU::AND,
+	&CPU::ANDI,
+	&CPU::BRN,
+	&CPU::BRP,
+	&CPU::BRZ,
+	&CPU::DIV,
+	&CPU::JAL,
+	&CPU::JMP,
+	&CPU::JALA,
+	&CPU::LB,
+	&CPU::LBI,
+	&CPU::LBS,
+	&CPU::LW,
+	&CPU::LWI,
+	&CPU::MULT,
+	&CPU::NOT,
+	&CPU::OR,
+	&CPU::ORI,
+	&CPU::RBS,
+	&CPU::RET,
+	&CPU::SB,
+	&CPU::SBI,
+	&CPU::SUB,
+	&CPU::SUBI,
+	&CPU::SW,
+	&CPU::SWI,
+	&CPU::INTER,
+	&CPU::XOR,
+	&CPU::XORI,
+	&CPU::HALT,
+	&CPU::RETI
+	};
+
 	std::map<Register, uint32_t*> registerFile;
 	std::vector<uint32_t> interruptq;
 
@@ -57,7 +93,6 @@ private:
 
 	// Initialzation methods
 	void initialize_registers();
-	void initialize_instruction_tables();
 
 	// Interrupt control
 	void service_interrupts();
@@ -119,4 +154,3 @@ public:
 
 
 #endif
-
