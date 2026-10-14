@@ -30,11 +30,7 @@ void MemoryController::writeByte(uint32_t address, uint32_t value) {
 		return;
 	}
 
-	// Context for aquiring lock
-	{
-		std::lock_guard<std::mutex> lock(addressSpaceLock);
-		addressSpace->at(address) = value & 0xFF;
-	}
+	addressSpace->at(address) = value & 0xFF;
 
 	auto it = IODeviceMap.find(address);
 	if (it == IODeviceMap.end()) { return; };
@@ -48,14 +44,10 @@ void MemoryController::writeWord(uint32_t address, uint32_t value) {
 		return;
 	}
 
-	// Context for aquiring lock
-	{
-		std::lock_guard<std::mutex> lock(addressSpaceLock);
-		addressSpace->at(address) = value & 0xFF;
-		addressSpace->at(address + 1) = (value >> 8) & 0xFF;
-		addressSpace->at(address + 2) = (value >> 16) & 0xFF;
-		addressSpace->at(address + 3) = (value >> 24) & 0xFF;
-	}
+	addressSpace->at(address) = value & 0xFF;
+	addressSpace->at(address + 1) = (value >> 8) & 0xFF;
+	addressSpace->at(address + 2) = (value >> 16) & 0xFF;
+	addressSpace->at(address + 3) = (value >> 24) & 0xFF;
 
 	for (uint32_t offset = 0; offset < 4; offset++) {
 		auto it = IODeviceMap.find(address + offset);
@@ -67,17 +59,14 @@ void MemoryController::writeWord(uint32_t address, uint32_t value) {
 
 void MemoryController::setReadyReg(uint32_t address, uint32_t value) {
 	// Enables IO to reset its ready register without signialing itself
-	std::lock_guard<std::mutex> lock(addressSpaceLock);
 	addressSpace->at(address) = value & 0xFF;
 }
 
 uint32_t MemoryController::readByte(uint32_t address) {
-	std::lock_guard<std::mutex> lock(addressSpaceLock);
 	return static_cast<uint32_t>(addressSpace->at(address));
 }
 
 uint32_t MemoryController::readWord(uint32_t address) {
-	std::lock_guard<std::mutex> lock(addressSpaceLock);
 	return  addressSpace->at(address)|
 			addressSpace->at(address + 1) << 8|
 			addressSpace->at(address + 2) << 16|

@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
     </Filter>
+    <Filter Include="Tools">
+      <UniqueIdentifier>{efd74af4-7c85-492b-982b-480649a87cee}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -39,10 +42,15 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />
-    <None Include="create_dummy_file.py" />
     <None Include=".gitignore" />
     <None Include="tests\32bitcpu.Tests.vcxproj" />
     <None Include="tests\32bitcpu.Tests.vcxproj.filters" />
+    <None Include="tools\create_dummy_file.py">
+      <Filter>Tools</Filter>
+    </None>
+    <None Include="tools\utils.py">
+      <Filter>Tools</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="header\CPU.h">

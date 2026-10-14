@@ -125,10 +125,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <None Include=".gitignore" />
-    <None Include="create_dummy_file.py" />
     <None Include="README.md" />
     <None Include="tests\32bitcpu.Tests.vcxproj" />
     <None Include="tests\32bitcpu.Tests.vcxproj.filters" />
+    <None Include="tools\create_dummy_file.py" />
+    <None Include="tools\utils.py" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />

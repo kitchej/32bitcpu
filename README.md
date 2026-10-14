@@ -12,24 +12,24 @@ LC-32 is RISC style architecture based on the LC-3 and MIPS architectures
 |**Addressing modes**|PC relative and register indirect|
 
 ### Programmable registers
-| Name | Value | Purpose | Persists After Subroutine Call
+| Name | Value | Purpose | Responsible For Restoring
 | ----------- | ----------- | ----------- | ----------- 
-|$R0-$R7|0-7|General Purpose | No
-|$RA|8| Subroutine Return Address | No
-|$A0-$A2|9-11|Subroutine Argument Registers | Yes
-|$V0-$V1|12-13|Subroutine Output Registers | No
-|$SP|14| Stack Pointer | Yes
-|$SF|15| Stack Frame Pointer | Yes
-|$R8-$R15|16-23| General Purpose | No
+|$R0-$R7|0-7| General Purpose | Callee
+|$RA|8| Subroutine Return Address | Callee
+|$A0-$A2|9-11|Subroutine Argument Registers | Caller
+|$V0-$V1|12-13|Subroutine Output Registers | Caller
+|$SP|14| Stack Pointer | Callee
+|$SF|15| Stack Frame Pointer | Callee
+|$T0-$T7| 16-23 | Temporaries | Caller
 ### Internal Registers
 | Name | Value | Purpose 
 | -----------|----------- | ----------- |
 |$IRA| 26| Interrupt Return Address
 |$PC| 27 | Program Counter
 |$FLAGS| 28 | BIT 31: Zero, BIT 30: Negative, BIT 29: Positive, BIT 28: D_ZERO, BIT 27: SERVICING_INTERRUPT, BIT 26: HALT
-|$IR| 29 |Instruction Register
-|$MAR| 30 |Memory Address Register
-|$MDR| 31 |Memory Data Register
+|$IR| 29 | Instruction Register
+|$MAR| 30 | Memory Address Register
+|$MDR| 31 | Memory Data Register
 
 
 #### Direct Addressing

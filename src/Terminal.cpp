@@ -4,10 +4,12 @@
 
 Terminal::Terminal() : IODevice(){
 	this->charRegAddr = 0;
+	mainloopThread = nullptr;
 }
 
 Terminal::Terminal(MemoryController* memoryController, uint32_t charRegAddr, uint32_t readyRegAddr): IODevice(memoryController, readyRegAddr){
 	this->charRegAddr = charRegAddr;
+	mainloopThread = nullptr;
 }
 
 void Terminal::mainloop() {
@@ -27,13 +29,19 @@ void Terminal::mainloop() {
 
 void Terminal::start(){
 	isRunning = true;
-	std::thread listener(&Terminal::mainloop, this);
-	listener.detach();
+	mainloopThread = new std::thread(&Terminal::mainloop, this);
 }
 
 void Terminal::stop() {
 	std::lock_guard<std::mutex> lock(IOLock);
 	isRunning = false;
+}
+
+Terminal::~Terminal() {
+	stop();
+	if (mainloopThread->joinable() && (mainloopThread != nullptr)) {
+		mainloopThread->join();
+	}
 }
 
 void Terminal::signal()  {

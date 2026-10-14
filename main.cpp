@@ -3,6 +3,7 @@
 #include <fstream>
 #include <vector>
 #include <cstdint>
+#include <cstdio>
 
 #include "header/memoryController.h"
 #include "header/CPU.h"
@@ -64,5 +65,7 @@ int main(int argc, char* argv[]) {
 		terminal->start();
 		cpu->mainloop();
 		terminal->stop();
+		std::cout << "System halted, press any key to exit" << std::endl;
+		std::getchar();
 		return 0;
 }

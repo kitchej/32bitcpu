@@ -4,11 +4,12 @@
 #include "../header/CPU.h"
 #include "../header/LC32_Globals.h"
 
-#define DISABLE_JUMPS true
+#define DISABLE_JUMPS false
 
 void CPU::initialize_registers() {
 	flags = 0;
-	r0 = 0;  r1 = 0;  r2 = 0;  r3 = 0;  r4 = 0;  r5 = 0;  r6 = 0;  r7 = 0, r8 = 0, r9 = 0, r10 = 0, r11 = 0, r12 = 0, r13 = 0, r14 = 0, r15 = 0;
+	r0 = 0;  r1 = 0;  r2 = 0;  r3 = 0;  r4 = 0;  r5 = 0;  r6 = 0;  r7 = 0;
+	t0 = 0; t1 = 0; t2 = 0; t3 = 0; t4 = 0; t5 = 0; t6 = 0; t7 = 0;
 	a0 = 0;  a1 = 0;  a2 = 0;
 	v0 = 0;  v1 = 0; ra = 0;
 	sp = 0;  sf = 0;
@@ -23,14 +24,14 @@ void CPU::initialize_registers() {
 	   { Register::R5,  &r5  },
 	   { Register::R6,  &r6  },
 	   { Register::R7,  &r7  },
-	   { Register::R8,  &r8  },
-	   { Register::R9,  &r9  },
-	   { Register::R10, &r10 },
-	   { Register::R11, &r11 },
-	   { Register::R12, &r12 },
-	   { Register::R13, &r13 },
-	   { Register::R14, &r14 },
-	   { Register::R15, &r15 },
+	   { Register::R8,  &t0  },
+	   { Register::R9,  &t1  },
+	   { Register::R10, &t2 },
+	   { Register::R11, &t3 },
+	   { Register::R12, &t4 },
+	   { Register::R13, &t5 },
+	   { Register::R14, &t6 },
+	   { Register::R15, &t7 },
 	   { Register::RA,  &ra  },
 	   { Register::A0,  &a0  },
 	   { Register::A1,  &a1  },
@@ -334,10 +335,8 @@ void CPU::SB(const Instruction& instr){
 }
 
 void CPU::SBI(const Instruction& instr){
-	// THESE OPCODE ARGUMENTS ARE CORRECT!
-	// DO NOT CHANGE THEM!
-	mar = *registerFile[(Register)instr.src]; // < CORRECT!
-	mdr = *registerFile[(Register)instr.dest]; // < CORRECT!
+	mar = *registerFile[(Register)instr.dest];
+	mdr = *registerFile[(Register)instr.src];
 	memoryController->writeByte(mar, mdr);
 	clear_flags();
 }
@@ -357,10 +356,8 @@ void CPU::SW(const Instruction& instr){
 }
 
 void CPU::SWI(const Instruction& instr){
-	// THESE OPCODE ARGUMENTS ARE CORRECT!
-	// DO NOT CHANGE THEM!
-	mar = *registerFile[(Register)instr.src]; // < CORRECT!
-	mdr = *registerFile[(Register)instr.dest]; // < CORRECT!
+	mar = *registerFile[(Register)instr.dest];
+	mdr = *registerFile[(Register)instr.src];
 	memoryController->writeWord(mar, mdr);
 	clear_flags();
 }

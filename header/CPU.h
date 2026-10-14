@@ -19,7 +19,9 @@ private:
 	static constexpr uint8_t MASK_6BIT = 0x3F;
 
 	// General Purpose Regesters
-	uint32_t r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, r13, r14, r15;
+	uint32_t r0, r1, r2, r3, r4, r5, r6, r7;
+	// Temporary Registers
+	uint32_t t0, t1, t2, t3, t4, t5, t6, t7;
 	// Special Purpose Regesters
 	uint32_t a0, a1, a2;
 	uint32_t v0, v1;
