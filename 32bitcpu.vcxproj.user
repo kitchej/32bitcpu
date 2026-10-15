@@ -9,9 +9,9 @@
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LocalDebuggerCommandArguments>dummy_file.bin</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>program.bin</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-    <LocalDebuggerCommandArgumentsHistory>dummy.bin|dummy_file.bin|</LocalDebuggerCommandArgumentsHistory>
+    <LocalDebuggerCommandArgumentsHistory>dummy.bin|dummy_file.bin|program.out|program.bin|</LocalDebuggerCommandArgumentsHistory>
     <LocalDebuggerDebuggerType>Auto</LocalDebuggerDebuggerType>
     <LocalDebuggerWorkingDirectory>.</LocalDebuggerWorkingDirectory>
   </PropertyGroup>

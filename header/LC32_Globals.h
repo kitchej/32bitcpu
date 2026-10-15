@@ -103,38 +103,13 @@ enum class CmdFmt {
 	J_TYPE
 };
 
-typedef struct R_Instruction {
-	Opcode opcode;
-	uint8_t dest;
-	uint8_t src;
-	uint8_t trgt;
-	uint8_t shamt;
-} R_Instruction;
-
-typedef struct I_Instruction {
-	Opcode opcode;
-	uint8_t dest;
-	uint8_t src;
-	uint32_t imm17;
-} I_Instruction;
-
-
-typedef struct J_Instruction {
-	Opcode opcode;
-	uint32_t offset26;
-} J_Instruction;
-
-
-// I plan to migrate to the above structs, but until then below is what you should use
-// BUT IF YOU CHAGNE YOUR MIND, DONT DELETE THEM! THE ASSEMBLER USES THEM!
-
 typedef struct Instruction {
 	Opcode opcode;
 	uint8_t dest;
 	uint8_t src;
 	uint8_t trgt;
 	uint8_t shamt;
-	uint32_t imm17;
+	uint32_t imm16;
 	uint32_t offset26;
 } Instruction;
 

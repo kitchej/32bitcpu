@@ -18,8 +18,6 @@ public:
 	void start();
 	void stop();
 	void signal() override;
-
-
 };
 
 #endif

@@ -83,14 +83,14 @@ void CPU::decode_rtype(uint32_t instr, Instruction& instrInfo) {
 	instrInfo.src = (instr >> 16) & MASK_5BIT;
 	instrInfo.trgt = (instr >> 11) & MASK_5BIT;
 	instrInfo.shamt = (instr >> 5) & MASK_5BIT;
-	instrInfo.imm17 = 0;
+	instrInfo.imm16 = 0;
 	instrInfo.offset26 = 0;
 }
 
 void CPU::decode_itype(uint32_t instr, Instruction& instrInfo) {
 	instrInfo.dest = (instr >> 21) & MASK_5BIT;
 	instrInfo.src = (instr >> 16) & MASK_5BIT;
-	instrInfo.imm17 = instr & MASK_17BIT;
+	instrInfo.imm16 = instr & MASK_17BIT;
 	instrInfo.trgt = 0;
 	instrInfo.offset26 = 0;
 
@@ -101,7 +101,7 @@ void CPU::decode_jtype(uint32_t instr, Instruction& instrInfo) {
 	instrInfo.dest = 0;
 	instrInfo.src = 0;
 	instrInfo.trgt = 0;
-	instrInfo.imm17 = 0;
+	instrInfo.imm16 = 0;
 }
 
 void CPU::fetch_instruction() {
@@ -113,11 +113,11 @@ void CPU::execute_instruction(const Instruction& instr) {
 	(this->*opTable[op_index])(instr);
 }
 
-void CPU::sign_extend_imm17(uint32_t &value) {
-	int32_t imm17 = (int32_t)value;
-	imm17 = imm17 << 15; // 32-17 = 15
-	imm17 = imm17 >> 15;
-	value = (uint32_t)imm17;
+void CPU::sign_extend_imm16(uint32_t &value) {
+	int32_t imm16 = (int32_t)value;
+	imm16 = imm16 << 15; // 32-17 = 15
+	imm16 = imm16 >> 15;
+	value = (uint32_t)imm16;
 }
 
 void CPU::sign_extend_offset26(uint32_t& value) {
@@ -273,23 +273,23 @@ void CPU::HALT(const Instruction& instr){
 
 // I-type Instructions
 void CPU::ADDI(const Instruction& instr){
-	uint32_t imm17 = instr.imm17;
-	sign_extend_imm17(imm17);
-	*registerFile[(Register)instr.dest] = (*registerFile[(Register)instr.src]) + imm17;
+	uint32_t imm16 = instr.imm16;
+	sign_extend_imm16(imm16);
+	*registerFile[(Register)instr.dest] = (*registerFile[(Register)instr.src]) + imm16;
 	set_flags_alu(*registerFile[(Register)instr.dest]);
 }
 
 void CPU::ANDI(const Instruction& instr) {
-	uint32_t imm17 = instr.imm17;
-	sign_extend_imm17(imm17);
-	*registerFile[(Register)instr.dest] = (*registerFile[(Register)instr.src]) & imm17;
+	uint32_t imm16 = instr.imm16;
+	sign_extend_imm16(imm16);
+	*registerFile[(Register)instr.dest] = (*registerFile[(Register)instr.src]) & imm16;
 	set_flags_alu(*registerFile[(Register)instr.dest]);
 }
 
 void CPU::LB(const Instruction& instr){
-	uint32_t imm17 = instr.imm17;
-	sign_extend_imm17(imm17);
-	mar = imm17 + pc;
+	uint32_t imm16 = instr.imm16;
+	sign_extend_imm16(imm16);
+	mar = imm16 + pc;
 	mdr = memoryController->readByte(mar);
 	*registerFile[(Register)instr.dest] = mdr;
 	clear_flags();
@@ -303,9 +303,9 @@ void CPU::LBI(const Instruction& instr){
 }
 
 void CPU::LW(const Instruction& instr){
-	uint32_t imm17 = instr.imm17;
-	sign_extend_imm17(imm17);
-	mar = imm17 + pc;
+	uint32_t imm16 = instr.imm16;
+	sign_extend_imm16(imm16);
+	mar = imm16 + pc;
 	mdr = memoryController->readWord(mar);
 	*registerFile[(Register)instr.dest] = mdr;
 	clear_flags();
@@ -319,16 +319,16 @@ void CPU::LWI(const Instruction& instr){
 }
 
 void CPU::ORI(const Instruction& instr){
-	uint32_t imm17 = instr.imm17;
-	sign_extend_imm17(imm17);
-	*registerFile[(Register)instr.dest] = (*registerFile[(Register)instr.src]) | imm17;
+	uint32_t imm16 = instr.imm16;
+	sign_extend_imm16(imm16);
+	*registerFile[(Register)instr.dest] = (*registerFile[(Register)instr.src]) | imm16;
 	set_flags_alu(*registerFile[(Register)instr.dest]);
 }
 
 void CPU::SB(const Instruction& instr){
-	uint32_t imm17 = instr.imm17;
-	sign_extend_imm17(imm17);
-	mar = imm17 + pc;
+	uint32_t imm16 = instr.imm16;
+	sign_extend_imm16(imm16);
+	mar = imm16 + pc;
 	mdr = *registerFile[(Register)instr.src];
 	memoryController->writeByte(mar, mdr);
 	clear_flags(); 
@@ -342,14 +342,14 @@ void CPU::SBI(const Instruction& instr){
 }
 
 void CPU::SUBI(const Instruction& instr){
-	*registerFile[(Register)instr.dest] = (*registerFile[(Register)instr.src]) - instr.imm17;
+	*registerFile[(Register)instr.dest] = (*registerFile[(Register)instr.src]) - instr.imm16;
 	set_flags_alu(*registerFile[(Register)instr.dest]);
 }
 
 void CPU::SW(const Instruction& instr){
-	uint32_t imm17 = instr.imm17;
-	sign_extend_imm17(imm17);
-	mar = imm17 + pc;
+	uint32_t imm16 = instr.imm16;
+	sign_extend_imm16(imm16);
+	mar = imm16 + pc;
 	mdr = *registerFile[(Register)instr.src];
 	memoryController->writeByte(mar, mdr);
 	clear_flags();
@@ -363,9 +363,9 @@ void CPU::SWI(const Instruction& instr){
 }
 
 void CPU::XORI(const Instruction& instr){
-	uint32_t imm17 = instr.imm17;
-	sign_extend_imm17(imm17);
-	*registerFile[(Register)instr.dest] = (*registerFile[(Register)instr.src]) ^ imm17;
+	uint32_t imm16 = instr.imm16;
+	sign_extend_imm16(imm16);
+	*registerFile[(Register)instr.dest] = (*registerFile[(Register)instr.src]) ^ imm16;
 	set_flags_alu(*registerFile[(Register)instr.dest]);
 }
 
