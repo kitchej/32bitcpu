@@ -20,7 +20,7 @@ static_assert(IO_MEMORY_OFFSET + IO_MEMORY_SIZE <= GENERAL_MEMORY_OFFSET,
 static_assert(GENERAL_MEMORY_OFFSET + GENERAL_MEMORY_SIZE <= TOTAL_MEMORY_SIZE,
 	"general memory region exceeds total memory");
 
-constexpr size_t HARDWARE_INTERRUPT_TABLE = 0X3FFF;
+constexpr size_t HARDWARE_INTERRUPT_TABLE = 0X3FFC;
 constexpr size_t SOFTWARE_INTERRUPT_TABLE = 0x14000;
 
 enum class Opcode : uint8_t {
@@ -128,10 +128,10 @@ const std::map<Opcode, CmdFmt> instructionFormats = {
 	{ Opcode::JMP,   CmdFmt::J_TYPE },
 	{ Opcode::JALA,  CmdFmt::R_TYPE },
 	{ Opcode::LB,    CmdFmt::I_TYPE },
-	{ Opcode::LBI,   CmdFmt::I_TYPE },
+	{ Opcode::LBI,   CmdFmt::R_TYPE },
 	{ Opcode::LBS,   CmdFmt::R_TYPE },
 	{ Opcode::LW,    CmdFmt::I_TYPE },
-	{ Opcode::LWI,   CmdFmt::I_TYPE },
+	{ Opcode::LWI,   CmdFmt::R_TYPE },
 	{ Opcode::MULT,  CmdFmt::R_TYPE },
 	{ Opcode::NOT,   CmdFmt::R_TYPE },
 	{ Opcode::OR,    CmdFmt::R_TYPE },
@@ -139,11 +139,11 @@ const std::map<Opcode, CmdFmt> instructionFormats = {
 	{ Opcode::RBS,   CmdFmt::R_TYPE },
 	{ Opcode::RET,   CmdFmt::J_TYPE },
 	{ Opcode::SB,    CmdFmt::I_TYPE },
-	{ Opcode::SBI,   CmdFmt::I_TYPE },
+	{ Opcode::SBI,   CmdFmt::R_TYPE },
 	{ Opcode::SUB,   CmdFmt::R_TYPE },
 	{ Opcode::SUBI,  CmdFmt::I_TYPE },
 	{ Opcode::SW,    CmdFmt::I_TYPE },
-	{ Opcode::SWI,   CmdFmt::I_TYPE },
+	{ Opcode::SWI,   CmdFmt::R_TYPE },
 	{ Opcode::INTER, CmdFmt::J_TYPE },
 	{ Opcode::XOR,   CmdFmt::R_TYPE },
 	{ Opcode::XORI,  CmdFmt::I_TYPE },

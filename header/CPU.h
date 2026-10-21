@@ -13,7 +13,7 @@ using OP_FPTR = void (CPU::*)(const Instruction&);
 class CPU {
 private:
 	// Bit masks
-	static constexpr uint32_t MASK_17BIT = 0x1FFFF;
+	static constexpr uint32_t MASK_16BIT = 0xFFFF;
 	static constexpr uint32_t MASK_26BIT = 0x3FFFFFF;
 	static constexpr uint8_t MASK_5BIT = 0x1F;
 	static constexpr uint8_t MASK_6BIT = 0x3F;
@@ -82,15 +82,13 @@ private:
 	// CPU Execution Methods
 	void set_flag(Flag flag, bool value);
 	void set_flags_alu(uint32_t regDestVal);
-	void clear_flags();
 	void fetch_instruction();
 	Instruction decode_instruction();
 	void decode_rtype(uint32_t instr, Instruction& instrInfo);
 	void decode_itype(uint32_t instr, Instruction& instrInfo);
 	void decode_jtype(uint32_t instr, Instruction& instrInfo);
 	void execute_instruction(const Instruction& instr);
-	void sign_extend_imm16(uint32_t &value);
-	void sign_extend_offset26(uint32_t& value);
+	void sign_extend_imm16(uint32_t &value);	void sign_extend_offset26(uint32_t& value);
 	void execute_jmp(const Instruction& instr);
 
 	// Initialzation methods

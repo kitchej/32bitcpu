@@ -1,6 +1,7 @@
 #include "../header/LC32_Globals.h"
 #include "../header/memoryController.h"
 #include "../header/IODevice.h"
+#include <iostream>
 
 MemoryController::MemoryController() {
 	addressSpace = new std::vector<uint8_t>(TOTAL_MEMORY_SIZE, 0);
@@ -21,7 +22,6 @@ MemoryController::~MemoryController() {
 }
 
 void MemoryController::registerIODevice(IODevice* device, uint32_t readyRegAddress) {
-	std::lock_guard<std::mutex> lock(IODeviceMapLock);
 	IODeviceMap[readyRegAddress] = device;
 }
 
@@ -29,8 +29,14 @@ void MemoryController::writeByte(uint32_t address, uint32_t value) {
 	if (address >= romStart && address <= romEnd) {
 		return;
 	}
-
-	addressSpace->at(address) = value & 0xFF;
+	
+	try {
+		addressSpace->at(address) = value & 0xFF;
+	}
+	catch (std::out_of_range& e) {
+		std::cout << "Attempted to write to invalid address " << address << std::endl;
+		throw e;
+	}
 
 	auto it = IODeviceMap.find(address);
 	if (it == IODeviceMap.end()) { return; };
@@ -44,10 +50,16 @@ void MemoryController::writeWord(uint32_t address, uint32_t value) {
 		return;
 	}
 
-	addressSpace->at(address) = value & 0xFF;
-	addressSpace->at(address + 1) = (value >> 8) & 0xFF;
-	addressSpace->at(address + 2) = (value >> 16) & 0xFF;
-	addressSpace->at(address + 3) = (value >> 24) & 0xFF;
+	try {
+		addressSpace->at(address) = value & 0xFF;
+		addressSpace->at(address + 1) = (value >> 8) & 0xFF;
+		addressSpace->at(address + 2) = (value >> 16) & 0xFF;
+		addressSpace->at(address + 3) = (value >> 24) & 0xFF;
+	}
+	catch (std::out_of_range& e) {
+		std::cout << "Attempted to write to invalid address " << address << std::endl;
+		throw e;
+	}
 
 	for (uint32_t offset = 0; offset < 4; offset++) {
 		auto it = IODeviceMap.find(address + offset);
@@ -59,16 +71,36 @@ void MemoryController::writeWord(uint32_t address, uint32_t value) {
 
 void MemoryController::setReadyReg(uint32_t address, uint32_t value) {
 	// Enables IO to reset its ready register without signialing itself
-	addressSpace->at(address) = value & 0xFF;
+
+	try {
+		addressSpace->at(address) = value & 0xFF;
+	}
+	catch (std::out_of_range& e) {
+		std::cout << "Attempted to write to invalid address " << address << std::endl;
+		throw e;
+	}
 }
 
 uint32_t MemoryController::readByte(uint32_t address) {
-	return static_cast<uint32_t>(addressSpace->at(address));
+	try {
+		return static_cast<uint32_t>(addressSpace->at(address));
+	}
+	catch (std::out_of_range& e) {
+		std::cout << "Attempted to read from invalid address " << address << std::endl;
+		throw e;
+	}
+	
 }
 
 uint32_t MemoryController::readWord(uint32_t address) {
-	return  addressSpace->at(address)|
-			addressSpace->at(address + 1) << 8|
-			addressSpace->at(address + 2) << 16|
-			addressSpace->at(address + 3) << 24;
+	try {
+		return  addressSpace->at(address) |
+				addressSpace->at(address + 1) << 8 |
+				addressSpace->at(address + 2) << 16 |
+				addressSpace->at(address + 3) << 24;
+	}
+	catch (std::out_of_range& e) {
+		std::cout << "Attempted to read from invalid address " << address << std::endl;
+		throw e;
+	}
 }

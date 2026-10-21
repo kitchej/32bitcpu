@@ -34,6 +34,9 @@ void Terminal::start(){
 
 void Terminal::stop() {
 	std::lock_guard<std::mutex> lock(IOLock);
+	char outChar = (char)memoryController->readByte(charRegAddr);
+	std::cout << outChar;
+	memoryController->setReadyReg(readyRegAddr, 0);
 	isRunning = false;
 }
 

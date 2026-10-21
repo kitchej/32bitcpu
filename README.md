@@ -10,6 +10,7 @@ LC-32 is RISC style architecture based on the LC-3 and MIPS architectures
 |**Word Size**|32 Bits|
 |**Endianess**|Little|
 |**Addressing modes**|PC relative and register indirect|
+|**Clock Speed**|1 Mhz|
 
 ### Programmable registers
 | Name | Value | Purpose | Responsible For Restoring
@@ -96,10 +97,10 @@ The global stack starts at 0xFFFFFFFC and is the default value of the $SF and $S
 |J|Jump|JMP|0x0A|PC=PC+4+(OFFSET*4)|OFFSET26||
 |R|Jump and Link Absolute|JAlA|0x0B|PC=SRC + 4; ra=pc = 4|SRC||
 |I|Load Byte|LB|0x0C|DEST=MEM[PC+4+OFFSET]|DEST|OFFSET17|
-|I|Load Byte Indirect|LBI|0x0D|DEST=MEM[BASE REG]|DEST|BASE REG|
+|R|Load Byte Indirect|LBI|0x0D|DEST=MEM[BASE REG]|DEST|BASE REG|
 |R|Left Bit Shift|LBS|0x0E|DEST=SRC<<SHIFT AMT|DEST|SRC|SHIFT AMT
 |I|Load Word|LW|0x0F|DEST=MEM[PC+4+(OFFSET*4)]|DEST|OFFSET16|
-|I|Load Word Indirect|LWI|0x10|DEST=MEM[BASE REG]|DEST|BASE REG|
+|R|Load Word Indirect|LWI|0x10|DEST=MEM[BASE REG]|DEST|BASE REG|
 |R|Multiply|MULT|0x11|DEST=SRC*TRGT|DEST|SRC|TRGT
 |R|Logical Not|NOT|0x12|DEST=~SRC|DEST|SRC|
 |R|Inclusive Or|OR|0x13|DEST=SRC\|TRGT|DEST|SRC|TRGT
@@ -107,11 +108,11 @@ The global stack starts at 0xFFFFFFFC and is the default value of the $SF and $S
 |R|Right Bit Shift|RBS|0x15|DEST=SRC>>SHIFT AMT|DEST|SRC|SHIFT AMT
 |J|Return from Subroutine|RET|0x16|PC=$RA||||
 |I|Store Byte|SB|0x17|MEM[PC+4+OFFSET]=SRC|SRC|OFFSET17|
-|I|Store Byte Indirect|SBI|0x18|MEM[BASE REG]=SRC|SRC|BASE REG|
+|R|Store Byte Indirect|SBI|0x18|MEM[BASE REG]=SRC|SRC|BASE REG|
 |R|Subtract|SUB|0x19|DEST=SRC-TRGT|DEST|SRC|TRGT
 |I|Subtract Immediate|SUBI|0x1A|DEST=SRC-imm16|DEST|SRC|imm16
 |I|Store Word|SW|0x1B|MEM[PC+4+(OFFSET*4)]=SRC|SRC|OFFSET17|
-|I|Store Word Indirect|SWI|0x1C|MEM[BASE REG]=SRC|SRC|BASE REG|
+|R|Store Word Indirect|SWI|0x1C|MEM[BASE REG]=SRC|SRC|BASE REG|
 |J|Interrupt|INTER|0x1D|PC=*(0x0FFFFFFF - OFFSET26)|OFFSET26||
 |R|Exclusive Or|XOR|0x1E|DEST=SRC^TRGT|DEST|SRC|TRGT
 |I|Exclusive Or Immediate|XORI|0x1F|DEST=SRC^imm16|DEST|SRC|IMM16

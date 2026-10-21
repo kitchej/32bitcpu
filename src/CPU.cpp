@@ -1,10 +1,21 @@
 #include <cstdint>
 #include <iostream>
 #include <mutex>
+#include <chrono>
+#include <thread>
 #include "../header/CPU.h"
 #include "../header/LC32_Globals.h"
 
+#ifdef _WIN32
+#include <windows.h>
+#elif __linux__
+#include <unistd.h>
+#endif
+
 #define DISABLE_JUMPS false
+constexpr uint32_t CLOCK_SPEED_HZ = 1'000'000;
+constexpr auto TIME_SLICE = std::chrono::milliseconds(10);
+constexpr uint32_t BATCH_SIZE = CLOCK_SPEED_HZ / 1000; // How many instructions must complete per ms to stay in time
 
 void CPU::initialize_registers() {
 	flags = 0;
@@ -13,7 +24,7 @@ void CPU::initialize_registers() {
 	a0 = 0;  a1 = 0;  a2 = 0;
 	v0 = 0;  v1 = 0; ra = 0;
 	sp = 0;  sf = 0;
-	pc = GENERAL_MEMORY_OFFSET;  ir = 0;  mar = 0;  mdr = 0, ira = 0;
+	pc = 0;  ir = 0;  mar = 0;  mdr = 0, ira = 0;
 
 	registerFile = {
 	   { Register::R0,  &r0  },
@@ -55,12 +66,31 @@ CPU::CPU(MemoryController* memoryController_obj) {
 
 void CPU::mainloop() {
 	Instruction curr_instr;
+	using cpu_clock = std::chrono::steady_clock;
+	//	  ^^^^^^ DO NOT CHANGE THIS! C USES 'clock' ALREADY, 
+	//		     AND YOU MAY SCREW STUFF UP IF YOU CHANGE THIS!
+
+	auto deadline = cpu_clock::now() + TIME_SLICE; // Deadline to complete a batch of instructions
+	uint32_t instructions_completed = 0;
 	while (!get_flag(Flag::HALT)) {
 		fetch_instruction();
 		curr_instr = decode_instruction();
 		execute_instruction(curr_instr);
 		service_interrupts();
 		pc += 4;
+
+		instructions_completed++;
+		if (instructions_completed == BATCH_SIZE) {
+			instructions_completed = 0;
+			std::this_thread::sleep_until(deadline);	    // Throttle CPU if we are done early
+			deadline += TIME_SLICE;						    // Then just add a new TIME_SLICE to what the deadline was
+			if (cpu_clock::now() > deadline + TIME_SLICE) { // But if we have gotten out of sync, we don't want the CPU to ramp up 
+														    // as that would defeat the purpose of this clock
+				deadline = cpu_clock::now() + TIME_SLICE;   // So instead we ignore the missed time and base new deadline off current time
+
+			}
+			
+		}
 	}
 }
 
@@ -82,7 +112,7 @@ void CPU::decode_rtype(uint32_t instr, Instruction& instrInfo) {
 	instrInfo.dest = (instr >> 21) & MASK_5BIT;
 	instrInfo.src = (instr >> 16) & MASK_5BIT;
 	instrInfo.trgt = (instr >> 11) & MASK_5BIT;
-	instrInfo.shamt = (instr >> 5) & MASK_5BIT;
+	instrInfo.shamt = (instr >> 6) & MASK_5BIT;
 	instrInfo.imm16 = 0;
 	instrInfo.offset26 = 0;
 }
@@ -90,7 +120,7 @@ void CPU::decode_rtype(uint32_t instr, Instruction& instrInfo) {
 void CPU::decode_itype(uint32_t instr, Instruction& instrInfo) {
 	instrInfo.dest = (instr >> 21) & MASK_5BIT;
 	instrInfo.src = (instr >> 16) & MASK_5BIT;
-	instrInfo.imm16 = instr & MASK_17BIT;
+	instrInfo.imm16 = instr & MASK_16BIT;
 	instrInfo.trgt = 0;
 	instrInfo.offset26 = 0;
 
@@ -115,8 +145,8 @@ void CPU::execute_instruction(const Instruction& instr) {
 
 void CPU::sign_extend_imm16(uint32_t &value) {
 	int32_t imm16 = (int32_t)value;
-	imm16 = imm16 << 15; // 32-17 = 15
-	imm16 = imm16 >> 15;
+	imm16 = imm16 << 16;
+	imm16 = imm16 >> 16;
 	value = (uint32_t)imm16;
 }
 
@@ -168,17 +198,14 @@ void CPU::poke_reg(Register address, uint32_t value) {
 	*registerFile[address] = value;
 }
 
-void CPU::clear_flags() {
-	flags = 0;
-}
-
 void CPU::set_flag(Flag flag, bool value) {
 	flags = (flags & ~(1u << flag)) | (static_cast<uint32_t>(value) << flag);
 }
 
 void CPU::set_flags_alu(uint32_t regDestVal) {
-	clear_flags();
+	
 	int32_t val = static_cast<int32_t>(regDestVal);
+	flags = 0;
 	if (val == 0) {
 		set_flag(Flag::ZERO, 1);
 	}
@@ -201,7 +228,7 @@ void CPU::execute_jmp(const Instruction& instr) {
 }
 
 // R-type Instructions (Except JALA)
-void CPU::NOP(const Instruction& instr) { clear_flags(); }
+void CPU::NOP(const Instruction& instr) {  }
 void CPU::ADD(const Instruction& instr){
 	*registerFile[(Register)instr.dest] = (*registerFile[(Register)instr.src]) + *registerFile[(Register)instr.trgt];
 	set_flags_alu(*registerFile[(Register)instr.dest]);
@@ -228,7 +255,7 @@ void CPU::DIV(const Instruction& instr){
 
 void CPU::LBS(const Instruction& instr) {
 	*registerFile[(Register)instr.dest] = (*registerFile[(Register)instr.src]) << instr.shamt;
-	clear_flags();
+	
 }
 
 void CPU::MULT(const Instruction& instr){
@@ -241,7 +268,7 @@ void CPU::MULT(const Instruction& instr){
 }
 void CPU::NOT(const Instruction& instr){
 	*registerFile[(Register)instr.dest] = ~(*registerFile[(Register)instr.src]);
-	clear_flags();
+	
 }
 
 void CPU::OR(const Instruction& instr){
@@ -252,7 +279,7 @@ void CPU::OR(const Instruction& instr){
 
 void CPU::RBS(const Instruction& instr) {
 	*registerFile[(Register)instr.dest] = (*registerFile[(Register)instr.src]) >> instr.shamt;
-	clear_flags();
+	
 }
 
 void CPU::SUB(const Instruction& instr){
@@ -266,7 +293,6 @@ void CPU::XOR(const Instruction& instr){
 }
 
 void CPU::HALT(const Instruction& instr){
-	clear_flags();
 	set_flag(Flag::HALT, true);
 }
 
@@ -292,14 +318,14 @@ void CPU::LB(const Instruction& instr){
 	mar = imm16 + pc;
 	mdr = memoryController->readByte(mar);
 	*registerFile[(Register)instr.dest] = mdr;
-	clear_flags();
+	
 }
 
 void CPU::LBI(const Instruction& instr){
 	mar = *registerFile[(Register)instr.src];
 	mdr = memoryController->readByte(mar);
 	*registerFile[(Register)instr.dest] = mdr;
-	clear_flags();
+	
 }
 
 void CPU::LW(const Instruction& instr){
@@ -308,14 +334,13 @@ void CPU::LW(const Instruction& instr){
 	mar = imm16 + pc;
 	mdr = memoryController->readWord(mar);
 	*registerFile[(Register)instr.dest] = mdr;
-	clear_flags();
+	
 }
 
 void CPU::LWI(const Instruction& instr){
 	mar = *registerFile[(Register)instr.src];
 	mdr = memoryController->readWord(mar);
 	*registerFile[(Register)instr.dest] = mdr;
-	clear_flags();
 }
 
 void CPU::ORI(const Instruction& instr){
@@ -329,19 +354,19 @@ void CPU::SB(const Instruction& instr){
 	uint32_t imm16 = instr.imm16;
 	sign_extend_imm16(imm16);
 	mar = imm16 + pc;
-	mdr = *registerFile[(Register)instr.src];
+	mdr = *registerFile[(Register)instr.dest];
 	memoryController->writeByte(mar, mdr);
-	clear_flags(); 
 }
 
 void CPU::SBI(const Instruction& instr){
 	mar = *registerFile[(Register)instr.dest];
 	mdr = *registerFile[(Register)instr.src];
 	memoryController->writeByte(mar, mdr);
-	clear_flags();
 }
 
 void CPU::SUBI(const Instruction& instr){
+	uint32_t imm16 = instr.imm16;
+	sign_extend_imm16(imm16);
 	*registerFile[(Register)instr.dest] = (*registerFile[(Register)instr.src]) - instr.imm16;
 	set_flags_alu(*registerFile[(Register)instr.dest]);
 }
@@ -350,16 +375,15 @@ void CPU::SW(const Instruction& instr){
 	uint32_t imm16 = instr.imm16;
 	sign_extend_imm16(imm16);
 	mar = imm16 + pc;
-	mdr = *registerFile[(Register)instr.src];
+	mdr = *registerFile[(Register)instr.dest];
 	memoryController->writeByte(mar, mdr);
-	clear_flags();
 }
 
 void CPU::SWI(const Instruction& instr){
 	mar = *registerFile[(Register)instr.dest];
 	mdr = *registerFile[(Register)instr.src];
 	memoryController->writeWord(mar, mdr);
-	clear_flags();
+	
 }
 
 void CPU::XORI(const Instruction& instr){
@@ -375,93 +399,93 @@ void CPU::XORI(const Instruction& instr){
 void CPU::JALA(const Instruction& instr) {
 	ra = pc;
 	pc = *registerFile[(Register)instr.src];
-	clear_flags();
+	
 }
 
 void CPU::BRN(const Instruction& instr) {
 	if (get_flag(Flag::NEG)) {
 		execute_jmp(instr);
 	}
-	clear_flags();
+	
 }
 
 void CPU::BRP(const Instruction& instr) {
 	if (get_flag(Flag::POS)) {
 		execute_jmp(instr);
 	}
-	clear_flags();
+	
 }
 
 void CPU::BRZ(const Instruction& instr) {
 	if (get_flag(Flag::ZERO)) {
 		execute_jmp(instr);
 	}
-	clear_flags();
+	
 }
 
 void CPU::JAL(const Instruction& instr) {
-	ra = pc;
+	ra = pc + 4;
 	execute_jmp(instr);
-	clear_flags();
+	
 }
 
 void CPU::JMP(const Instruction& instr) {
 	execute_jmp(instr);
-	clear_flags();
+	
 }
 
 void CPU::RET(const Instruction& instr) {
-	pc = ra;
-	clear_flags();
+	pc = ra - 4;
+	
 }
 
 void CPU::INTER(const Instruction& instr) {
-	clear_flags();
+	
 	interrupt(instr.offset26);
 }
 
 void CPU::RETI(const Instruction& instr) {
 	pc = ira - 4;
 	set_flag(Flag::SERVICING_INTERRUPT, false);
-	clear_flags();
+	
 }
 
 #else
 
 void CPU::JALA(const Instruction& instr) {
-	clear_flags();
+	
 }
 
 void CPU::BRN(const Instruction& instr) {
-	clear_flags();
+	
 }
 
 void CPU::BRP(const Instruction& instr) {
-	clear_flags();
+	
 }
 
 void CPU::BRZ(const Instruction& instr) {
-	clear_flags();
+	
 }
 
 void CPU::JAL(const Instruction& instr) {
-	clear_flags();
+	
 }
 
 void CPU::JMP(const Instruction& instr) {
-	clear_flags();
+	
 }
 
 void CPU::RET(const Instruction& instr) {
-	clear_flags();
+	
 }
 
 void CPU::INTER(const Instruction& instr) {
-	clear_flags();
+	
 }
 
 void CPU::RETI(const Instruction& instr) {
-	clear_flags();
+	
 }
 
 #endif

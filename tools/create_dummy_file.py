@@ -57,7 +57,6 @@ def main():
 		encode_rtype(OPCODES["XOR"], dest=9, src=9, trgt=9),
 		encode_itype(OPCODES["ADDI"], dest=9, src=9, imm17=0x1),
 		encode_itype(OPCODES["SBI"], dest=11, src=9, imm17=0)
-
 		encode_jtype(OPCODES["RETI"], offset26=0)
 	]
 
