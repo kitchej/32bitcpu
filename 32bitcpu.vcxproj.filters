@@ -39,6 +39,9 @@
     <ClCompile Include="src\IODevice.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Debugger.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />
@@ -72,6 +75,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="header\LC32_Globals.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Debugger.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

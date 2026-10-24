@@ -12,9 +12,9 @@
 #include <unistd.h>
 #endif
 
-#define DISABLE_JUMPS false
+constexpr bool DISABLE_JUMPS = false; // Replaces all jumps with empty function bodies. Useful when you only want to test decoding
 constexpr uint32_t CLOCK_SPEED_HZ = 1'000'000;
-constexpr auto TIME_SLICE = std::chrono::milliseconds(10);
+constexpr auto TIME_SLICE = std::chrono::milliseconds(1);
 constexpr uint32_t BATCH_SIZE = CLOCK_SPEED_HZ / 1000; // How many instructions must complete per ms to stay in time
 
 void CPU::initialize_registers() {
@@ -64,21 +64,26 @@ CPU::CPU(MemoryController* memoryController_obj) {
 	memoryController = memoryController_obj;
 }
 
-void CPU::mainloop() {
-	Instruction curr_instr;
-	using cpu_clock = std::chrono::steady_clock;
-	//	  ^^^^^^ DO NOT CHANGE THIS! C USES 'clock' ALREADY, 
-	//		     AND YOU MAY SCREW STUFF UP IF YOU CHANGE THIS!
+void CPU::step() { 
+	/*
+	Nesscary for controlling the CPU via a debugger
+	Pulls the next instruction from this->ir, therefore 
+	fetch_instruction() must be called before step()!
+	*/
+	Instruction curr_instr = decode_instruction();
+	execute_instruction(curr_instr);
+	service_interrupts();
+	pc += 4;
+}
 
+void CPU::mainloop() {
+	
+	using cpu_clock = std::chrono::steady_clock;
 	auto deadline = cpu_clock::now() + TIME_SLICE; // Deadline to complete a batch of instructions
 	uint32_t instructions_completed = 0;
 	while (!get_flag(Flag::HALT)) {
 		fetch_instruction();
-		curr_instr = decode_instruction();
-		execute_instruction(curr_instr);
-		service_interrupts();
-		pc += 4;
-
+		step();
 		instructions_completed++;
 		if (instructions_completed == BATCH_SIZE) {
 			instructions_completed = 0;
@@ -89,7 +94,6 @@ void CPU::mainloop() {
 				deadline = cpu_clock::now() + TIME_SLICE;   // So instead we ignore the missed time and base new deadline off current time
 
 			}
-			
 		}
 	}
 }
@@ -205,15 +209,20 @@ void CPU::set_flag(Flag flag, bool value) {
 void CPU::set_flags_alu(uint32_t regDestVal) {
 	
 	int32_t val = static_cast<int32_t>(regDestVal);
-	flags = 0;
 	if (val == 0) {
+		set_flag(Flag::POS, 0);
+		set_flag(Flag::NEG, 0);
 		set_flag(Flag::ZERO, 1);
 	}
 	else if (val < 0) {
+		set_flag(Flag::POS, 0);
 		set_flag(Flag::NEG, 1);
+		set_flag(Flag::ZERO, 0);
 	}
 	else {
 		set_flag(Flag::POS, 1);
+		set_flag(Flag::NEG, 0);
+		set_flag(Flag::ZERO, 0);
 	}
 }
 
@@ -268,7 +277,7 @@ void CPU::MULT(const Instruction& instr){
 }
 void CPU::NOT(const Instruction& instr){
 	*registerFile[(Register)instr.dest] = ~(*registerFile[(Register)instr.src]);
-	
+	set_flags_alu(*registerFile[(Register)instr.dest]);
 }
 
 void CPU::OR(const Instruction& instr){
@@ -279,7 +288,7 @@ void CPU::OR(const Instruction& instr){
 
 void CPU::RBS(const Instruction& instr) {
 	*registerFile[(Register)instr.dest] = (*registerFile[(Register)instr.src]) >> instr.shamt;
-	
+	set_flags_alu(*registerFile[(Register)instr.dest]);
 }
 
 void CPU::SUB(const Instruction& instr){
@@ -376,7 +385,7 @@ void CPU::SW(const Instruction& instr){
 	sign_extend_imm16(imm16);
 	mar = imm16 + pc;
 	mdr = *registerFile[(Register)instr.dest];
-	memoryController->writeByte(mar, mdr);
+	memoryController->writeWord(mar, mdr);
 }
 
 void CPU::SWI(const Instruction& instr){
@@ -397,8 +406,8 @@ void CPU::XORI(const Instruction& instr){
 
 // J-type Instructions
 void CPU::JALA(const Instruction& instr) {
-	ra = pc;
-	pc = *registerFile[(Register)instr.src];
+	ra = pc + 4;
+	pc = *registerFile[(Register)instr.src] - 4;
 	
 }
 

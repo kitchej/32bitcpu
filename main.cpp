@@ -10,6 +10,8 @@
 #include "header/Terminal.h"
 #include "header/IODevice.h"
 
+constexpr bool debug = true;
+
 constexpr uint32_t TERM_CHAR_REG = 0x4000;
 constexpr uint32_t TERM_READY_REG = 0x4001;
 
@@ -87,15 +89,24 @@ int main(int argc, char* argv[]) {
 		Load modules here
 		*/
 
+
+
 		MemoryController *memoryController = new MemoryController(memory, KERNAL_MEMORY_OFFSET, KERNAL_MEMORY_END);
 		CPU *cpu = new CPU(memoryController);
 		Terminal* terminal = new Terminal(memoryController, TERM_CHAR_REG, TERM_READY_REG);
 		memoryController->registerIODevice((IODevice*)terminal, TERM_READY_REG);
 
-		terminal->start();
-		cpu->mainloop();
-		terminal->stop();
-		std::cout << "System halted, press any key to exit" << std::endl;
-		std::getchar();
+		
+		if (debug) {
+
+		}
+		else {
+			terminal->start();
+			cpu->mainloop();
+			terminal->stop();
+			std::cout << "System halted, press any key to exit" << std::endl;
+			std::getchar();
+		}
+		
 		return 0;
 }

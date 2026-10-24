@@ -103,6 +103,7 @@ public:
 	CPU(MemoryController* memoryController_obj);
 
 	void mainloop();
+	void step();
 	void reset();
 	uint32_t peek_reg(Register address);
 	void poke_reg(Register address, uint32_t value);

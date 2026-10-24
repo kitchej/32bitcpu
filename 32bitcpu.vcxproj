@@ -132,6 +132,7 @@
     <None Include="tools\utils.py" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Debugger.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="src\CPU.cpp" />
     <ClCompile Include="src\IODevice.cpp" />
@@ -141,6 +142,7 @@
     <ClCompile Include="src\WinKeyboard.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Debugger.h" />
     <ClInclude Include="header\CPU.h" />
     <ClInclude Include="header\IODevice.h" />
     <ClInclude Include="header\LC32_Globals.h" />

@@ -19,7 +19,7 @@ void Terminal::mainloop() {
 		if (!isRunning) {
 			return;
 		}
-
+		
 		char outChar = (char)memoryController->readByte(charRegAddr);
 		std::cout << outChar;
 		memoryController->setReadyReg(readyRegAddr, 0);
@@ -34,14 +34,16 @@ void Terminal::start(){
 
 void Terminal::stop() {
 	std::lock_guard<std::mutex> lock(IOLock);
-	char outChar = (char)memoryController->readByte(charRegAddr);
-	std::cout << outChar;
-	memoryController->setReadyReg(readyRegAddr, 0);
 	isRunning = false;
+	readyRegWritten.notify_all();
 }
 
 Terminal::~Terminal() {
 	stop();
+	if (memoryController->readByte(readyRegAddr)) {
+		char outChar = (char)memoryController->readByte(charRegAddr);
+		std::cout << outChar;
+	}
 	if (mainloopThread->joinable() && (mainloopThread != nullptr)) {
 		mainloopThread->join();
 	}
@@ -50,5 +52,5 @@ Terminal::~Terminal() {
 void Terminal::signal()  {
 	std::lock_guard<std::mutex> lock(IOLock);
 	ready = true;
-	readyRegWritten.notify_one();
+	readyRegWritten.notify_all();
 }
